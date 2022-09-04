@@ -43,13 +43,13 @@ class Interface:
 
     def create_figure(self):
         # create figure
-        self.fig, axs = plt.subplots(nrows=self.rows, ncols=self.columns, figsize=(9, 6))
+        self.fig, axs = plt.subplots(nrows=self.rows, ncols=self.columns, figsize=(9, 5))
         self.fig.patch.set_facecolor('snow')
         self.fig.canvas.set_window_title('Project 1 - Arquitectura de Computadores 1')
         self.fig.set_facecolor(self.bg_color)
         self.fig.suptitle('Bilinear Interpolation', fontweight ="bold")
         self.fig.canvas.mpl_connect('button_press_event', self.on_press)
-        plt.subplots_adjust(top=0.80, bottom=0.2)
+        plt.subplots_adjust(top=0.85, bottom=0.2)
         self.ax1 = axs[0]
         self.ax2 = axs[1]
     
@@ -124,9 +124,10 @@ class Interface:
         self.pic = self.rgb2gray(cv2.imread(self.path))
         self.create_tiles()
         self.square.set_xy((2, 2))
+        self.index = 0
         self.ax1.imshow(self.pic, cmap = plt.get_cmap('gray'))
         if (not self.visible): self.toggle_visibility()
-        print ("\nUploaded:",self.path)
+        # print ("\nUploaded:",self.path)
 
 
     # Apply algorithm
