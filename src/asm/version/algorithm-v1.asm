@@ -1,7 +1,6 @@
 %include "linux64.inc"
 ; %include "io.inc"
 section .data
-    random array TIMES 30 db 0b ; array con 10 posiciones
     file_in    db  'image.txt', 0                   ; name of input image file
     file_out   db  'image-i.txt', 0      ; name of output image file
 
