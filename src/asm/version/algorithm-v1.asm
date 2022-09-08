@@ -1,3 +1,6 @@
+; nasm -felf64 -o algorithm-v1.o algorithm-v1.asm && ld -o algorithm-v1 algorithm-v1.o && ./algorithm-v1
+; gdb algorithm-v1
+
 %include "linux64.inc"
 ; %include "io.inc"
 section .data
@@ -87,7 +90,7 @@ _write:
     mov rax, 4                  ; kernel op code 4 to sys_write
     mov rbx, [fd_out]           ; move file descriptor of out file to ebx
     mov rcx, buff               ; write contents of line in to new file
-    mov rdx, 1                 ; write 6 bytes to new txt file
+    mov rdx, 1                  ; write 6 bytes to new txt file
     int 80h                     ; os execute
 
     jmp _read

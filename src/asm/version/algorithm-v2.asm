@@ -10,8 +10,8 @@ section .data
     ARRAY TIMES 100 db 0                ; matrix memory allocation
     index dw 0
 
-    file_in     db  '../../files/image.txt', 0      ; name of input image file
-    file_out    db  '../../files/image-i.txt', 0    ; name of output image file
+    file_in     db  'image.txt', 0      ; name of input image file
+    file_out    db  'image-i.txt', 0    ; name of output image file
 
 
 section .bss
