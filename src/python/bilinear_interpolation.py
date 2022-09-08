@@ -1,31 +1,20 @@
-from array import array
-from logging import raiseExceptions
-from re import S
 import numpy as np
-import cv2
-import pathlib
-from pathlib import Path
-from PIL import Image
-import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
-
-from binascii import hexlify
-# os.getcwd(), 'imgs\\'
-# filename = 'image.txt'
 import os
 
 filename = "image.txt"
-filename = os.path.join(os.getcwd(), 'src', 'asm', filename)
+filename = os.path.join(os.getcwd(), 'files', filename)
+
+# Parse a np matrix to a list
 
 
 def matrix_to_list(matrix):
     lst = []
-
     for r in matrix:
         lst.extend(r)
-    print(lst)
-    write_file(matrix)
+    # print(lst)
     return lst
+
+# Parse the image pixels to a $name$.txt in a cleaner way.
 
 
 def write_file(matrix):
@@ -38,83 +27,71 @@ def write_file(matrix):
 
 def write_file_aux(row):
     s = ''
-    for col in range(0, len(row)-85):
+    for col in range(0, len(row)):
         n = str(row[col])
         if (len(n) == 3):
             s += n + " "
         else:
             s += '0' + n + " "
-
     print(s)
     return s[:-1]  # Remove last space
 
-
-def openFiles():
-    global f
-    f = open(filename, 'r')
-    readFile()
+# For reading image file and test.
 
 
-k = 0
-x_n = 0
-x_nPtr = 0
-output = []
-inputCtr = 0  # when its 2 means I have A and B
-size = 4
-rax = 0
-rbx = 0
-rcx = 0
-rdx = 0
-lineIn = ""
-# Read 4 bytes
-# Counter in 0
-# Analize and get the real value
+def read_file():
+    f = open(filename, "r")
+    tmp = f.read()
+    tmp = tmp[:-2].split('\n')
+    arr = []
+    for n in tmp:
+        arr += (n.split(' '))
+    # print(arr)
+    return arr
 
-def readFile():
-    # read by character
-    lineIn = f.read(4)
-    lineIn = str_to_bytearray(lineIn)
-    if (lineIn[3] is 70):  # F
-        f.close()
 
-    rax = loadInput()
+def pprint_matrix(label, arr):
+    print(label)
+    print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in arr]))
 
-# Converts ASCII to dec and load it in input x_n
-def loadInput():
-    
-    # First Bit
-    
-    # mov rdx, lineIn   -   move current line pos to rdx.
-    rdx = lineIn
-    
-    # mov rax, 0        -   set rax on 0, to operate with it.
-    rax = 0
-    
-    # mov rbx, x_n      -   copy x_n pos to rbx
-    # mov [rbx], rax    -   move a 0 into the current sample memory pos of x_n using rbx.
-    rbx = rax
-    
-    # mov rbx, 100      -   set rbx to 100 (multiplier)
-    rbx = 100
-    # mov rcx, 0        -   set rcx to 0 (result)
-    loadInputLoop()
-    
-def loadInputLoop():
-    # mov rax, 0        -   mov a 0 to rax to restart register
-    rax = 0
-    # mov al, byte[rdx] -   move in al(rax) a byte in pos rdx (line in start)
-    
-    
 
-    
-    
-    
+def pprint_vector(label, arr):
+    print(label)
+    print('\t'.join([str(cell) for cell in arr]))
 
-def str_to_bytearray(s):
-    encoded = s.encode('utf-8')
-    b = bytearray(encoded)
-    # print(hex(b[0]))
-    return b
+
+def bilinear_interpolation(arr, n):
+    # ctr = 0
+    k = (3*n)-2
+    bucket = [0] * (k*k)
+    print("Number colums:\t", k)
+    print("Bucket spaces:\t", len(bucket))
+
+    # First place values
+    pprint_vector("\narray: ", arr)
+    bucket = place_values(arr, bucket, k)
+    pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
+
+    # Now algorithm
+
+
+def place_values(arr, bucket, k, base=1, n=0, i=0):
+    if (n > len(bucket)-1):
+        return bucket
+
+    limit = base*k
+    print("\nn: ", n, "➜", limit,
+          "\t k: ", k,
+          "\t i: ", i)
+
+    while n < limit:
+        if (n % 3 == 0):
+            bucket[n] = int(arr[i])
+            print('arr :', int(arr[i]))
+            i += 1
+        n += 1
+    n += 20
+    return place_values(arr, bucket, k, base+3, n, i)
 
 
 def bilinear_interpolate_aux(A, B, C, D):
@@ -138,7 +115,7 @@ def bilinear_interpolate_aux(A, B, C, D):
 
 
 # print(np.matrix(I2))
-# print('\n'.join(['\t'.join([str(cell) for cell in row]) for row in v]))
+
 
 # print(im[0][:16])
 # print(im[1][:16])
@@ -147,4 +124,5 @@ def bilinear_interpolate_aux(A, B, C, D):
 # print(im[4][:16])
 # print(im[5][:16])
 
-openFiles()
+arr = read_file()
+bilinear_interpolation(arr, 4)

@@ -15,10 +15,11 @@ class Interface:
     rows = 1
     columns = 2
     bg_color = 'whitesmoke'
-    lines_color = 'aqua'
-    sq_color = 'aqua'
+    lines_color = 'black'
+    sq_color = 'red'
     bn1_color = 'darkgrey'
     bn2_color = 'darkturquoise'
+    hl_color = 'aqua'
     path = None
     pic = None
     visible = True
@@ -27,6 +28,8 @@ class Interface:
     ticks = range(0, full_pixels, div_pixels)[1:-1]
     tiles = []
     index = 0
+    square_offset = 5
+    square_size = 88
 
     def __init__(self):
         # plt.close()
@@ -35,8 +38,8 @@ class Interface:
     def create_tiles(self):
         for y1 in range(0, self.full_pixels-2, self.div_pixels):
             for x1 in range(0, self.full_pixels-2, self.div_pixels):
-                x2 = x1 + self.div_pixels-1
-                y2 = y1 + self.div_pixels-1
+                x2 = x1 + self.div_pixels
+                y2 = y1 + self.div_pixels
                 self.tiles.append([x1, y1, x2, y2])
         # print(self.tiles)
 
@@ -71,9 +74,9 @@ class Interface:
         plt.axis('off')
 
         # square
-        x = y = 2
+        x = y = 20
         self.square = patches.Rectangle(
-            (x, y), 93, 93, linewidth=3, edgecolor=self.sq_color, facecolor='none')
+            (x, y), self.square_size, self.square_size, linewidth=4, edgecolor=self.sq_color, facecolor='none')
         self.ax1.add_patch(self.square)
 
         # visibility
@@ -83,12 +86,12 @@ class Interface:
         # add upload button
         ax_button = plt.axes([0.40, 0.03, 0.1, 0.075])
         bn_load = Button(ax_button, 'Upload',
-                         color=self.bn1_color, hovercolor=self.lines_color)
+                         color=self.bn1_color, hovercolor=self.hl_color)
         bn_load.on_clicked(self.load_image)
         # add apply button
         ax_apply = plt.axes([0.505, 0.03, 0.1, 0.075])
         bn_apply = Button(ax_apply, 'Apply',
-                          color=self.bn2_color, hovercolor=self.lines_color)
+                          color=self.bn2_color, hovercolor=self.hl_color)
         bn_apply.on_clicked(self.apply_algorithm)
 
         plt.show()
@@ -115,8 +118,7 @@ class Interface:
 
             self.index = self.index+1 if (self.index < 15) else 0
             x, y = self.tiles[self.index][0], self.tiles[self.index][1]
-            offset = 2
-            self.square.set_xy((x+offset, y+offset))
+            self.square.set_xy((x+self.square_offset, y+self.square_offset))
             self.fig.canvas.draw()
 
     # Load Image
@@ -128,7 +130,7 @@ class Interface:
             filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
         self.pic = self.rgb2gray(cv2.imread(self.path))
         self.create_tiles()
-        self.square.set_xy((2, 2))
+        # self.square.set_xy((2, 2))
         self.index = 0
         self.ax1.imshow(self.pic, cmap=plt.get_cmap('gray'))
         if (not self.visible):
