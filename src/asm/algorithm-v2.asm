@@ -1,18 +1,26 @@
 ;; nasm -felf64 -o algorithm-v2.o algorithm-v2.asm && ld -o algorithm-v2 algorithm-v2.o && ./algorithm-v2
 ;; gdb algorithm-v2
-
+;p /t(char[10])ARRAY
 
 %include "linux64.inc"
-; %include "io.inc"
+%include "utils.inc"
 section .data
     
     ; in gdb    -   p /t(char[10])ARRAY
     ARRAY TIMES 100 db 0                ; matrix memory allocation
-    index dw 0
+    index       dw 0
+    arr_len     dw 100
+    arr_col     dw 10
+    num_multiplier    db 100
 
     file_in     db  '../../files/image.txt', 0      ; name of input image file
     file_out    db  '../../files/image-i.txt', 0    ; name of output image file
 
+    ; messages
+    msg1 db	'The current ARRAY is:',0xA,0xD 	
+    len1 equ $ - msg1
+
+    MULTIPLIER  equ 100
 
 section .bss
 ; file management
@@ -30,6 +38,7 @@ section .text
 _start:
     call _openFiles
     call _read
+    call _vertical_pixels
     call _closeFiles
     call _exit
 
@@ -43,77 +52,59 @@ _read:
     mov rdx, 4                ; amount of bytes read on rdx
     int 80h                   ; os execute
 
-    jmp _ascii2dec
-_fileEnd: ret
-    
-;     cmp rax, 0                ;cmp exit
-; _stop:
-;     je _exit
+; load number
+    ascii_to_dec buffer, MULTIPLIER        ; return decimal value in rax
+    mov  r10b, byte[rdx]      ; read in dl forth byte at pointer rdx (buffer ptr)
+
+;#####################
+    push_reg
+    call _write
+    pop_reg
+;######################
+
+b3:
+; conditions
+    cmp  r10, space             ; compare number in rax to (space ~32) to determine end of num in buffer
+    jz   _loadSpace             ; break if analyzed byte is ' ' (end of number)
+b4:
+    cmp  r10, newline           ; compare number in rax to (new line ~10) to determine end of line in buffer
+    jz   _loadNewLine           ; break if analyzed byte is '\n' (end of line)
+;loop
+    cmp  r10, F                 ; compare number in rax to (F ~70) to determine end of file in buffer
+    jne   _read                 ; break if analyzed byte is 'F' (end of file)
+
+    ret
+
+; ------
+; _loadSpace():
+; Load al into ARRAY[index], also index increase by 3.
+_loadSpace:
+    load_to_array ARRAY, index  ; load value
+    ; bx is pointing to the index from the prev function
+    add     bx, 3               ; increment the index by 3.
+    mov     [index], bx         ; load new value to index
+    jmp     _read
+
+; ------
+; _loadNewLine():
+; Load al into ARRAY[index], also index increase by 21.
+_loadNewLine:
+    load_to_array ARRAY, index  ; load value
+    ; bx is pointing to the index from the prev function
+    add     bx, 21               ; increment the index by 21.
+    mov     [index], bx
+    jmp     _read
+
+
+
+
+_vertical_pixels:
+    ;; calculate vertical pixeles
 
 
 ; ------
-; _ascii2dec()
-; Converts buffer ASCII value to dec and load it into ARRAY[index]
-_ascii2dec:
-    mov  rdx, buffer            ; move current buffer pos to rdx
-    mov  rax, 0                 ; set rax on 0, to operate with it
-    mov  rbx, byte_ctr          ; move byte_ctr ptr to rbx
-    mov  [rbx], rax             ; init byte_ctr value to 0
-    
-    mov  rbx, 100               ; set rbx to 100 (multiplier)
-    mov  rcx, 0                 ; mov rcx to 0 (result)
-
-_ascii2dec_aux:
-    mov  rax, 0                 ; move a 0 to rax to restart register
-    mov  al, byte[rdx]          ; read in al first byte at pointer rdx (buffer ptr)
-
-; conditions
-    cmp  rax, 32                ; compare number in rax to (space ~32) to determine end of num in buffer
-    jz   _loadAscii             ; break if analyzed byte is ' ' (end of number)
-
-    cmp  rax, 10                ; compare number in rax to (new line ~10) to determine end of line in buffer
-    jz   _newLine               ; break if analyzed byte is '\n' (end of line)
-
-    cmp  rax, 70                ; compare number in rax to (F ~70) to determine end of file in buffer
-    jz   _fileEnd               ; break if analyzed byte is 'F' (end of file)
-
-; conversion from ASCII to dec
-    sub     rax, 48             ; substract 48('0') to get decimal on rax
-
-    push    rdx                 ; store rdx (buffer ptr) in stack - for multiplication operation
-    mul     rbx                 ; rax (product) <- multiply rax (dec num) with rbx (multiplier)
-    add     rcx, rax            ; add rax (product) into rbx (result)
-    pop     rdx                 ; restore rdx (buffer ptr) from stack
-
-; divide multiplier by 2
-    push    rax                 ; store rax (dec num) in stack - for division operation
-    mov     rax, rbx            ; move rbx (multiplier) into rax
-    push    rdx                 ; store rdx (buffer ptr) in stack - for division operation
-    mov     rdx, 0              ; set rdx to 0 to avoid division issues
-    mov     rbx, 10             ; move a 10 to rbx, this will be our divisor
-    div     rbx                 ; divide rax (multiplier) by rbx (divisor ~10)
-    mov     rbx, rax            ; restore rax to rbx
-    pop     rdx                 ; restore rdx (buffer ptr)
-    pop     rax                 ; restore rax (dec num)
-    
-; loop
-    inc     rdx                 ; next memory position in rdx 
-    jmp     _ascii2dec_aux      ; continue loop
-
-_newLine:
-    movzx   ax,[index]          ; ax will point to the current index in ARRAY [zero extended] 
-    mov     [ARRAY+rax], cl     ; give the ax-th array element the value cl
-    inc     word[index]         ; increment the index by 4.
-    inc     word[index]         ; increment the index by 4.
-    jmp _write
-    
-_loadAscii:
-    movzx   ax,[index]          ; ax will point to the current index in ARRAY [zero extended] 
-    mov     [ARRAY+rax], cl     ; give the ax-th array element the value cl
-    inc     word[index]         ; increment the index by 4.
-    ; jmp _read
-
-; write to file
+; _write():
+; Write to file
 _write:
     ; write line on file
     mov rax, 4                  ; kernel op code 4 to sys_write
@@ -121,12 +112,7 @@ _write:
     mov rcx, buffer             ; write contents of line in to new file
     mov rdx, 4                  ; write 6 bytes to new txt file
     int 80h                     ; os execute
-
-    jmp _read
-
-
-
-;p /t(char[10])ARRAY
+    ret
 
 
 ; ------
@@ -141,7 +127,7 @@ _openFiles:
     int 0x80            ; os execute
 
     ; store input file descriptor
-    mov [fd_in], rax        ; store input file descriptor
+    mov [fd_in], rax    ; store input file descriptor
 
     ; open input file
     mov rax, 8          ; kernel code for sys_create
@@ -151,7 +137,7 @@ _openFiles:
     int 0x80            ; os execute
 
     ; store output file descriptor
-    mov [fd_out], rax       ; store output file descriptor
+    mov [fd_out], rax   ; store output file descriptor
 
     ret
 
@@ -176,6 +162,6 @@ _closeFiles:
 ; exit system
 _exit:
 ; exit program
-    mov rax, 1              ; ID for sys_close
+    mov rax, 1          ; ID for sys_close
     mov rbx, 0
     int 0x80
