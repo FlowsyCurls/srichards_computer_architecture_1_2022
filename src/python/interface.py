@@ -141,12 +141,17 @@ class Interface:
     def apply_algorithm(self, event):
         if (self.path == None):
             return
+
         box = self.tiles[self.index]
         crop_image = self.pic[box[1]:box[3], box[0]:box[2]]
+        
         if (crop_image is None):
             return
-        matrix_to_list(crop_image.tolist())
-
+        
+        # Write to txt.
+        array_list = crop_image.tolist()
+        algorithm(crop_image.tolist()) 
+        
         print("Dimensions:", crop_image.shape)
         InterpolatedImage = crop_image
         self.ax2.imshow(InterpolatedImage, cmap=plt.get_cmap('gray'))

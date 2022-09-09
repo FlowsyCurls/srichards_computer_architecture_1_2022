@@ -4,25 +4,29 @@ import os
 filename = "image.txt"
 filename = os.path.join(os.getcwd(), 'files', filename)
 
+
+
+def algorithm(matrix):
+    print_matrix(matrix)
+    write_file(matrix)
+    
 # Parse a np matrix to a list
 
 
-def matrix_to_list(matrix):
+def print_matrix(matrix):
     lst = []
     for r in matrix:
         lst.extend(r)
     # print(lst)
-    return lst
-
 # Parse the image pixels to a $name$.txt in a cleaner way.
 
 
 def write_file(matrix):
     with open(filename, 'w') as f:
-        for row in matrix:
+        for row in matrix[:-1]:
             f.write(write_file_aux(row))
             f.write('\n')
-        f.write('F')
+        f.write(write_file_aux(matrix[-1])+'F')
 
 
 def write_file_aux(row):
@@ -31,8 +35,10 @@ def write_file_aux(row):
         n = str(row[col])
         if (len(n) == 3):
             s += n + " "
-        else:
+        elif (len(n) == 2):
             s += '0' + n + " "
+        else:
+            s += '0' + n + "0 "
     print(s)
     return s[:-1]  # Remove last space
 
@@ -124,5 +130,5 @@ def bilinear_interpolate_aux(A, B, C, D):
 # print(im[4][:16])
 # print(im[5][:16])
 
-arr = read_file()
-bilinear_interpolation(arr, 4)
+# arr = read_file()
+# bilinear_interpolation(arr, 4)
