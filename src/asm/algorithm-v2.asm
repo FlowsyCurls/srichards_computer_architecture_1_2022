@@ -4,47 +4,6 @@
 
 %include "linux64.inc"
 %include "utils.inc"
-section .data
-    
-;modify array size, array len, array rows, file
-; 97
-    ARRAY TIMES 83521 db 0                            ; matrix memory allocation
-    index           dd 0
-    ARRAY_LENGTH    dd 289
-    ARRAY_ROWS      dd 289
-    file_in     db  '../../files/image97.txt', 0      ; name of input image file
-
-; ; 10
-;     ARRAY TIMES 100 db 0                            ; matrix memory allocation
-;     index           dd 0
-;     ARRAY_LENGTH    dd 100
-;     ARRAY_ROWS      dd 10
-;     file_in     db  '../../files/image.txt', 0      ; name of input image file
-
-
-    file_out    db  '../../files/image-i.txt', 0    ; name of output image file
-
-    ; messages
-    msg1 db	'The current ARRAY is:',0xA,0xD
-    len1 equ $ - msg1
-    msg_space db	'',0x20
-    msg_newline db	'',0xA
-    MULTIPLIER  equ 100
-
-
-    ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)index
-
-section .bss
-; file management
-    fd_in       resb    4      ; in file descriptor
-    fd_out      resb    4      ; out file descriptor
-
-; sample information
-    buffer      resd     1     ; buffer length
-    byte_ctr    resd     1     ; current input sample
-    output_ptr  resd     1     ; used to iterate through the array
-    ascii_value resd     3     ; stores the ascii output sample
-
 
 section .text
         global _start
@@ -121,15 +80,12 @@ _write:
     mov rdx, 0                  ; clear rdx
     mov r14, ARRAY              ; save pointer to initial value in array
 _writing:
-
-
     mov al, byte[r14]           ; current value to analyze
-;     ; push rcx
     push_reg
 ; get ascii value
 
     dec_to_ascii                  ; return array address in rax
-    call _writeASCII_3digits
+a:    call _writeASCII_3digits
 
 ; writing new line
     movzx ecx, word[ARRAY_ROWS]     ; save number of rows to know when to make new line.
@@ -144,10 +100,10 @@ w:  jz _writing_newline
 
 _continue_writing:
     pop_reg
-a:
+
     add r15d, 1
     inc r14b
-v:
+
 ; stop condition
     movzx r13d, word[ARRAY_LENGTH]
 c:    add r13, 1
@@ -162,11 +118,11 @@ _writeASCII_3digits:
 ; array address in rax
     mov sil, 3                      ; number of iterations 3
     xor cl, cl                      ; set counter
-    mov rdx, buffer                 ; load buffer address
+d:    mov rdx, buffer                 ; load buffer address
 _writing_ascii_3digits_loop:
     mov bl, [rax+rcx]               ; load value in efective address
     mov byte[rax+rcx], 0x30         ; load a 0 to value in efective address
-    mov [rdx], bl                   ; save value in buffer
+c1:    mov [rdx], bl                   ; save value in buffer
     push_reg
     write buffer, 1                    ; write buffer
     pop_reg
@@ -249,3 +205,39 @@ _exit:
     mov rax, 1          ; ID for sys_close
     mov rbx, 0
     int 0x80
+
+
+section .data
+;97
+    index           dd 0
+    ARRAY_LENGTH    dd 83521
+    ARRAY_ROWS      dd 289
+; ; 10
+;     index           dd 0
+;     ARRAY_LENGTH    dd 100
+;     ARRAY_ROWS      dd 10
+; files
+    ; file_in     db  '../../files/image.txt', 0      ; name of input image file
+    file_in     db  '../../files/image97.txt', 0      ; name of input image file
+    file_out    db  '../../files/image-i.txt', 0    ; name of output image file
+; messages
+    msg1 db	'The current ARRAY is:',0xA,0xD
+    len1 equ $ - msg1
+    msg_space db	'',0x20
+    msg_newline db	'',0xA
+    MULTIPLIER  equ 100
+    ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)index
+
+    ; ARRAY TIMES 100 db 0                            ; matrix memory allocation
+    ARRAY TIMES 83521 db 0                            ; matrix memory allocation
+
+
+section .bss
+; file management
+    fd_in       resb    4      ; in file descriptor
+    fd_out      resb    4      ; out file descriptor
+; sample information
+    buffer      resd     1     ; buffer length
+    byte_ctr    resd     1     ; current input sample
+    ascii_value resd     3     ; stores the ascii output sample
+
