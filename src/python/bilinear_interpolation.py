@@ -1,7 +1,7 @@
 import numpy as np
 import os
 
-filename = "image.txt"
+filename = "image97.txt"
 filename = os.path.join(os.getcwd(), 'files', filename)
 
 

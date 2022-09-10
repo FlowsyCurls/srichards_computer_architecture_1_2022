@@ -1,9 +1,13 @@
 section	.data
 space       equ 32
-newline     equ 52
+newline     equ 10
 tab         equ 09
 F           equ 70
 i           dw 0
+value       db 4; string buffer to store results
+; strAsciiResult db 3 dup (0)
+section .bss
+strAsciiResult    resd     4
 
 ; ------
 ; push_reg()
@@ -41,11 +45,14 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 
 
 ; ------
-; ascii()
+; ascii_to_dec()
 ; Function that convert from ascii to decimal 
 %macro ascii_to_dec 2
-; %1 : pointer to buffer
-; %2 : multiplier
+; > Input
+;   %1 : pointer to buffer
+;   %2 : multiplier
+; > Output
+;   result in rax
 
 ; set pointer
     mov  rdx, %1                ; move (buffer ptr) to rdx
@@ -88,16 +95,155 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 
 
 ; ------
+; dec_to_ascii()
+; Function that convert from decimal to ascii
+%macro dec_to_ascii 0
+; > Input
+;   Load pointer to value in rax before call
+; > Output
+;   result in rax
+    mov rcx, 10                     ; divisor
+    xor bx, bx                      ; count digits
+ %%divide:
+    xor rdx, rdx                    ; high part = 0
+    div rcx                         ; EAX (quotient)  ej: 123 / 10 => 12
+                                    ; EDX (remainder) ej: 123 / 10 => 3
+    push rdx                        ; DL is a digit in range [0..9]
+    mov r12,rdx
+    inc bx                          ; count digits
+    test rax, rax                   ; EAX is 0?
+    jnz %%divide                    ; no, continue
+
+    ; POP digits from stack in reverse order
+    mov cx, bx                      ; number of digits / LOOP uses ecx to stop
+    mov rsi, strAsciiResult         ; DS:SI points to string buffer
+%%next_digit:
+    pop rax
+    add al, '0'                     ; convert to ASCII
+    mov [rsi+rcx], al    ; write it to the buffer
+    inc si
+    loop %%next_digit
+    mov rax, [strAsciiResult]       ; return value in rax
+
+; ; conversion from ASCII to dec
+;     add     rax, 48             ; add 48('0') to get ascii on rax
+;     push    rdx                 ; store rdx (buffer ptr) in stack - for multiplication operation
+;     mul     rbx                 ; rax (product) <- multiply rax (ascii digit) with rbx (multiplier)
+;     pop     rdx                 ; restore rdx (buffer ptr) from stack
+
+; ; divide multiplier by 10
+;     push    rax                 ; store rax (ascii digit) in stack - for division operation
+;     mov     rax, rbx            ; move rbx (multiplier) into rax
+;     push    rdx                 ; store rdx (buffer ptr) in stack - for division operation
+;     mod     10                  ; EAX (quotient) <= rax // 10.  ej: 1000 // 10 = 100
+;     mov     rbx, rax            ; restore rax to rbx (module)
+;     pop     rdx                 ; restore rdx (buffer ptr)
+
+; ; condition
+;     cmp     rbx, 0              ; compare number in rbx to (1//10 = 0) to determine end of num in buffer
+;     jz      %%returnAscii       ; break if multiplier becomes 0 (end of number)
+
+; ; loop
+;     inc     rdx                 ; next memory position in rdx 
+;     jmp     %%_ascii_loop
+
+; %%returnAscii:
+;     inc     rdx               ; leave memory pointer in last byte
+    
+;     mov   rax, rcx            ; move rcx (result) to rax
+%endmacro
+; https://stackoverflow.com/questions/9113772/assembly-numbers-to-ascii
+
+
+
+; ------
 ; _loadArray():
 ; Load 'al' register into ARRAY[index]
 %macro load_to_array 2
 ; %1 : pointer to array
 ; %2 : pointer to index
-    movzx   bx,[%2]          ; bx will point to the current index in ARRAY [zero extended] 
-    mov     [%1+rbx], al     ; give the rbx-th array element the value al
+    mov  ebx,[%2]          ; bx will point to the current index in ARRAY [zero extended] 
+    mov  [%1+rbx], al     ; give the rbx-th array element the value al
     ; inc     word[%2]         ; increment the index by 4.
 %endmacro
 
+
+%macro write 1
+; ------
+; _write():
+; Write to file
+; > Input
+;   %1 : pointer to data to be written
+    ; write line on file
+    mov rax, 4                  ; kernel op code 4 to sys_write
+    mov rbx, [fd_out]           ; move file descriptor of out file to ebx
+    mov rcx, %1                 ; write contents received
+    mov rdx, 4                  ; write 6 bytes to new txt file
+    int 80h                     ; os execute
+%endmacro
+
+; ; ----------------------------------------------------
+; ; printm():
+; ; Print matrix
+; %macro printm 2
+; ; > Input
+; ;   %1 : pointer to array
+;     push_reg
+;     mov rax, %1     ; move array ptr to the rax
+;     mov rbx, 0      ; counter
+; %%lm:
+;     mov rax, [r10]
+;     and rax, MASK
+
+;     push_registers
+;     call print_rax
+;     pop_registers
+
+;     loop lm
+
+
+; %endmacro
+
+
+; _print_matrix_Loop:
+
+;         cmp r9, rbx  ; Si contador == MATRIX_SRC_SIZE
+;         je  _print_matrix_end
+
+;         mov rax, [r10]
+;         and rax, MASK
+
+;         push_registers
+;         call print_rax
+;         pop_registers
+
+;         print_console tab,1
+
+;         add r10,4
+;         add r9,1
+
+;         push rax
+;         push rbx
+
+;         mov rax, r9
+;         mov rbx, rcx
+;         modulo          
+
+;         cmp rax, 0
+;         je _print_new_row
+
+; _continue_print:
+
+;         pop rbx
+;         pop rax
+
+;         jmp _print_matrix_Loop
+
+; _print_new_row:
+
+;         print_console new_line,1
+
+;         jmp _continue_print
 
 ; %macro print_row 2
 

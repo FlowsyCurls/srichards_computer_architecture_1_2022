@@ -130,7 +130,7 @@ class Interface:
             filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
         self.pic = self.rgb2gray(cv2.imread(self.path))
         self.create_tiles()
-        # self.square.set_xy((2, 2))
+        self.square.set_xy((self.square_offset, self.square_offset))
         self.index = 0
         self.ax1.imshow(self.pic, cmap=plt.get_cmap('gray'))
         if (not self.visible):
