@@ -89,10 +89,10 @@ def vertical_interpolation(bucket, PIXELS):
     # knownIndex2 = currentIndex + 3*PIXELS
 
     # print(knUP, knDN, ukUP, ukDN)
-
-    for j in range(0, PIXELS, 3):
-        
-        for i in range(0, len(bucket)-3*PIXELS, 3*PIXELS):
+    i,j = 0,0
+    while (j < PIXELS):
+        i=0
+        while (i < len(bucket)-3*PIXELS):
             i += j
             print("i:",i)
             unknownIndex1 = i + PIXELS
@@ -103,11 +103,13 @@ def vertical_interpolation(bucket, PIXELS):
             knUP = bucket[knownIndex1]
             knDN = bucket[knownIndex2]
             ukUP = round((2/3)*knUP + (1/3)*knDN)
-            ukDN = round((1/3)*knUP + (2/3)*knDN)
+            ukDN = round((2/3)*knDN + (1/3)*knUP )
             # print(knUP, knDN, ukUP, ukDN)
             bucket[unknownIndex1] = ukUP
             bucket[unknownIndex2] = ukDN
-
+            i+=3*PIXELS
+        j+=3
+            
     pprint_matrix("\nFilled bucket: ", np.reshape(bucket, (10, 10)))
 
 

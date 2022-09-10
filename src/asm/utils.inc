@@ -5,7 +5,7 @@
 ; 10
 ARRAY_LENGTH equ 100
 PIXELS equ 10
-COLUMNS equ PIXELS-1
+LASTCOLUMN equ PIXELS-1
 
 PIXELS_MUL_BY_2 equ 2*PIXELS
 PIXELS_MUL_BY_3 equ 3*PIXELS
@@ -48,6 +48,18 @@ section .bss
     pop rax
 %endmacro
 
+
+; -------------------------------------------------------------------------------
+; clear_reg()
+; Function that clears most used registers
+%macro clear_reg 0
+    mov rax, 0
+    mov rbx, 0
+    mov rcx, 0
+    mov rdx, 0
+    mov rsi, 0
+    mov rdi, 0
+%endmacro
 
 ; -------------------------------------------------------------------------------
 ; mod(num)

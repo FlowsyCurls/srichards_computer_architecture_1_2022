@@ -13,7 +13,7 @@ section .text
 _start:
     call _openFiles
     call _read
-    ; call _algorithm
+    call _algorithm
     call _write
     call _closeFiles
     call _exit
@@ -69,76 +69,112 @@ _loadNewLine:
 
 ; -------------------------------------------------------------------------------
 _algorithm:
-    mov rax, 0
-    mov rbx, 0
-    mov rcx, 0
-    mov rdx, 0
-    mov r10, 0              ; i
-    mov r11, 0              ; j
-    mov r12, 0              ; 3*PIXELS
-    mov r13, 0              ; len(arr) - 3*PIXELES
+
+
+; TESTING
+; b _vertical_pixels
+; b _vertical_loop_j
+; i r rdx r15
 _vertical_pixels:
-
-
-    ;; calculate vertical pixeles
-a:  mov rdx, ARRAY
-
-; calculate 3*PIXELS
-    mov eax, PIXELS
-    mov bl, 3
-    mul bl
-    mov r12d, eax
-; get len(arr) - 3*PIXELES
-    movzx r13d, word[ARRAY_LENGTH]
-    sub r13d, r12d
-; loop
-
-_stop_loop_i:
-
-; continue with loop j
-    add r11, 3
-    inc dl
-    jmp _vertical_pixels_loop_j
-
-
-
-_vertical_pixels_loop_j:
-    cmp r11d, PIXELS
-    jge _stop_loop_j
-
-    xor r10d, 0                             ; reset i to 0.
-; start loop i
-_vertical_pixels_loop_i:
-    cmp r10d, r13d
-    jge _stop_loop_i                        ; if i is greater or equal to arr len - 3*Pixels, done
-    add r10d, r11d                          ; i + j
-
-    add r10d, r12d
-    jmp _vertical_pixels_loop_i
-
-
-; _vertical_pixels_loop_i:
-    ; cmp r11d, PIXELS
-    ; jge _stop_loop_i
-;     add r10d, r11d                              ; i+=j
-;      ; load address of current index to edx
-;     movzx ecx, byte[rdx]
-;     ; mov r10b, byte[rdx] 
-;     mov [knownIndex1], ecx  ; load value of the firt index
-;     ; vertical_interpolation knownIndex1, knownIndex2, unknownIndex1, unknownIndex2
-
-;     cmp r11d, r13d              ; if i is array len - 3 *pixels
-;     jmp _vertical_pixeles_loop
-
-    ; increase variables.
-
-; _stop_loop_i:
-
-_stop_loop_j:
-
-
+;; calculate vertical pixeles
+    mov rbp, ARRAY              ; get array start pointer to the base pointer
+    clear_reg
+    xor r15, 0                  ; j - for j in range(0, PIXELS, 3):
+    jmp _vertical_loop_j
+_vertical_pixels_end:
     ret
 
+
+_vertical_loop_j:
+; stop condition
+    cmp r15, PIXELS             
+    jge _vertical_pixels_end    ; If counter is greather or equal PIXELS, then stop
+    push r15
+; call vertical loop with i procedure
+    mov r14, 0                  ; i - for i in range(0, len(array)-3*PIXELS, 3*PIXELS)
+    add r14, r15                ; i += j
+    jmp _vertical_loop_i
+_continue_loop_j:
+    pop r15
+; increase references
+    add r15, 3                  ; add 3 to counter
+    jmp _vertical_loop_j
+
+_vertical_loop_i:
+; stop condition
+    cmp r14, ARRAY_LENGTH_MINUS_3PIXELS             
+    jge _continue_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
+    push r14
+; call arithmethic procedure
+    clear_reg
+    call _vertical_arithmetic
+t:
+    pop r14
+; increase references
+    add r14, PIXELS_MUL_BY_3    ; add 3*PIXELS to counter
+    jmp _vertical_loop_i
+
+
+_vertical_arithmetic:
+    clear_reg
+
+; knownIndex1
+    mov bl, byte[ARRAY+r14]     ; load value at relative address to bl (low-order 8 bits)
+
+; knownIndex2
+    mov rax, r14                ; copy i value to rax
+    mov rax, PIXELS_MUL_BY_3    ; i + 3*PIXELS
+    mov bh, byte[ARRAY+rax]     ; load value at relative address to bh (high-order 8 bits)
+
+; unknownIndex1
+    mov rax, r14                ; copy i value to rax
+    add rax, PIXELS             ; i + PIXELS
+    ; mov [unknownIndex1], rax    ; save in unknownIndex1
+    lea rsi, [ARRAY+rax]        ; load relative address to rsi
+
+; unknownIndex2
+    mov rax, r14                ; copy i value to rax
+    add rax, PIXELS_MUL_BY_2    ; i + 2*PIXELS
+    ; mov [unknownIndex2], rax  ; save in unknownIndex2
+    lea rdi, [ARRAY+rax]        ; load relative address to rsi
+
+
+; till  here we have:
+;   bl = knownValue1
+;   bh = knownValue2
+    ; xor rax, rax                ; clear rax
+    ; xor rdx, rdx                ; clear rdx
+    call _calc_067_then_033
+    
+    ret
+    ; lea rsi, [ARRAY+]
+
+
+_calc_067_then_033:
+; > OUTPUT
+;    cl = unknownValue
+
+; cl = (2 * x) // 3
+    xor  rax, rax           ; clear rax
+    mov  al, bl             ; move bl in al (as numbers are just 1 byte) [zero extend]
+    mov  dl, 2              ; move a 2 in dl (multiplier)
+    mul  dl                 ; AX (product) => (2 * x)
+    mov  dl, 3              ; move a 3 in dl (divisor)
+    div  dl                 ; AL (quotient) => (2 * y) // 3
+    mov cl, al              ; move al to r8b. (8bits) 0-255
+; cl += (1 * y) // 3
+z: 
+    xor  rax, rax           ; clear rax
+    mov  al, bh             ; move bh in al
+    mov  dl, 3              ; move a 3 in dl (divisor)
+    div  dl                 ; AL (quotient) => knownValue2 // 3
+    add  cl, al             ; add to r8b the value in al (8bits)
+x:
+    ret
+
+    ; i r bl bh al dl cl
+
+; _stop_loop_i:
 
 
 
