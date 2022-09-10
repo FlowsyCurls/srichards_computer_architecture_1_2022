@@ -9,10 +9,9 @@ section	.data
 
 
 section .bss
-    ; asciiResult    resd     4
 
     
-; ------
+; -------------------------------------------------------------------------------
 ; push_reg()
 ; Function that pushes all registers to stack
 %macro push_reg 0
@@ -22,7 +21,8 @@ section .bss
     push rdx
 %endmacro
 
-; ------
+
+; -------------------------------------------------------------------------------
 ; pop_reg()
 ; Function that pops all registers to stack
 %macro pop_reg 0
@@ -33,7 +33,7 @@ section .bss
 %endmacro
 
 
-; ------
+; -------------------------------------------------------------------------------
 ; mod(num)
 ; Function that executes: eax % (%1)
 ; MAKE SURE TO PUSH EAX AND EDX
@@ -47,7 +47,7 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 %endmacro
 
 
-; ------
+; -------------------------------------------------------------------------------
 ; ascii_to_dec()
 ; Function that convert from ascii to decimal 
 %macro ascii_to_dec 2
@@ -97,7 +97,8 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 %endmacro
 
 
-; ------
+
+; -------------------------------------------------------------------------------
 ; dec_to_ascii()
 ; Function that convert from decimal to ascii
 %macro dec_to_ascii 0
@@ -123,11 +124,11 @@ div ebx ; Divides eax = 1234 by ebx = 3.
     jnz %%divide                    ; no, continue
 
     mov rax, strAsciiResult         ; return pointer in rax
-
 %endmacro
 
 
-; ------
+
+; -------------------------------------------------------------------------------
 ; _loadArray():
 ; Load 'al' register into ARRAY[index]
 %macro load_to_array 2
@@ -139,10 +140,11 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 %endmacro
 
 
-%macro write 2
-; ------
+
+; -------------------------------------------------------------------------------
 ; _write():
 ; Write to file
+%macro write 2
 ; > Input
 ;   %1 : pointer to data to be written
     ; write line on file
@@ -154,6 +156,7 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 %endmacro
 
 
+; -------------------------------------------------------------------------------
 %macro print_f 2 
     mov   eax, 4
     mov   ebx, 1
@@ -164,64 +167,15 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 
 
 
-
-
-
-
-
-; %macro print_row 2
-;     ; array ptr
-;     ; array column size
-
-;     push_reg
-;     xor   r10, r10         ;This make the 'index' = 0
-; %%loop:
-;     print_value newline, 1
-;     cmp   r10, %2           ; until n < k 
-;     jb    %%loop
-;     pop_reg
-; %endmacro
-
-
-
-; %macro print_matrix 3
-;     ; array ptr
-;     ; array length
-;     ; array column size
-;     xor   r11, r11          ; 'index' = 0
-; %%loop:
-;     print_array %1, %3, r11
-;     mov   eax, 4
-;     mov   ebx, 1
-;     mov   r12, [%1+r11]     ; save value in r10
-;     mov   ecx, r12d            ; '\n'
-;     mov   edx, 1            ; 1 byte
-;     int   80h
-;     cmp   r11, %2           ; until n < k 
-;     jb    %%loop
-; %endmacro
-
-; %macro print_array 3
-;     ; array ptr
-;     ; array column size
-;     xor   r10, r10         ;This make the 'index' = 0
-; %%loopRow:
-;     mov   r10, [%1+r11]     ; save value in r10
-;     inc   r10
-;     inc   r11b
-
-;     mov   eax, 4
-;     mov   ebx, 1
-;     mov   cl, r10b         ; array
-;     mov   edx, 1           ; 1 byte
-;     int   80h
-
-;     cmp   r10, %3           ; until n < k 
-;     jb    %%loopRow
-
-;     mov   eax, 4
-;     mov   ebx, 1
-;     mov   ecx, 8            ; '\t'
-;     mov   edx, 1            ; 1 byte
-;     int   80h
-; %endmacro
+; -------------------------------------------------------------------------------
+%macro vertical_interpolation 0
+; > Input
+; unknownIndex1 = currentIndex + PIXELS
+; unknownIndex2 = currentIndex + 2*PIXELS
+; knownIndex1 = currentIndex
+; knownIndex2 = currentIndex + 3*PIXELS
+    mov   ebx, 1
+    mov   ecx, %1   ; msg
+    mov   edx, %2   ; text len
+    int   80h
+%endmacro

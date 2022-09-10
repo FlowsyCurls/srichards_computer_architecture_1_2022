@@ -5,6 +5,14 @@
 %include "linux64.inc"
 %include "utils.inc"
 
+; ; 97
+; RESOLUTION equ 83521
+; PIXELS equ 289
+
+; 10
+RESOLUTION equ 100
+PIXELS equ 10
+
 section .text
         global _start
 
@@ -16,7 +24,7 @@ _start:
     call _closeFiles
     call _exit
 
-; ------
+; -------------------------------------------------------------------------------
 ; _read()
 ; Read file contents
 _read:
@@ -41,35 +49,45 @@ _read:
     cmp  r10, F                 ; compare number in rax to (F ~70) to determine end of file in buffer
     jne   _read                 ; break if analyzed byte is 'F' (end of file)
 
-    load_to_array ARRAY, index  ; load value
+    load_to_array ARRAY, INDEX  ; load value
     ret
 
 ; ------
 ; _loadSpace():
-; Load al into ARRAY[index], also index increase by 3.
+; Load al into ARRAY[INDEX], also index increase by 3.
 _loadSpace:
-    load_to_array ARRAY, index  ; load value
+    load_to_array ARRAY, INDEX  ; load value
     ; bx is pointing to the index from the prev function
     add     bx, 0x3               ; increment the index by 3.
-    mov     [index], bx         ; load new value to index
+    mov     [INDEX], bx         ; load new value to index
 
     jmp     _read
 
 ; ------
 ; _loadNewLine():
-; Load al into ARRAY[index], also index increase by 21.
+; Load al into ARRAY[INDEX], also index increase by 21.
 _loadNewLine:
-    load_to_array ARRAY, index  ; load value
+    load_to_array ARRAY, INDEX  ; load value
     ; bx is pointing to the index from the prev function
-    add     bx, 0x15               ; increment the index by 21.
-    mov     [index], bx
+    add     bx, 0x15               ; increment the INDEX by 21.
+    mov     [INDEX], bx
     jmp     _read
 
+; -------------------------------------------------------------------------------
 _vertical_pixels:
     ;; calculate vertical pixeles
+    
 
 
-; ------
+
+
+
+
+
+
+
+
+; -------------------------------------------------------------------------------
 ; _write():
 ; Write to output file
 _write:
@@ -83,30 +101,24 @@ _writing:
     mov al, byte[r14]           ; current value to analyze
     push_reg
 ; get ascii value
-
     dec_to_ascii                  ; return array address in rax
-a:    call _writeASCII_3digits
-
+    call _writeASCII_3digits
 ; writing new line
     movzx ecx, word[ARRAY_ROWS]     ; save number of rows to know when to make new line.
     mov rax, r15                    ; move counter value to rax
     mov rdx, 0                      ; reset rdx to prevent error in division
     div rcx                         ; EDX =   0 = 97 % 97  (remainder)
     cmp dx, 0
-w:  jz _writing_newline
-
+    jz _writing_newline
 ; writing space
     write msg_space, 1
-
 _continue_writing:
     pop_reg
-
     add r15d, 1
     inc r14b
-
 ; stop condition
     movzx r13d, word[ARRAY_LENGTH]
-c:    add r13, 1
+    add r13, 1
     cmp r15, r13             
     jne _writing                    ; If counter is equal to array length stop.
 
@@ -118,11 +130,11 @@ _writeASCII_3digits:
 ; array address in rax
     mov sil, 3                      ; number of iterations 3
     xor cl, cl                      ; set counter
-d:    mov rdx, buffer                 ; load buffer address
+    mov rdx, buffer                 ; load buffer address
 _writing_ascii_3digits_loop:
     mov bl, [rax+rcx]               ; load value in efective address
     mov byte[rax+rcx], 0x30         ; load a 0 to value in efective address
-c1:    mov [rdx], bl                   ; save value in buffer
+    mov [rdx], bl                   ; save value in buffer
     push_reg
     write buffer, 1                    ; write buffer
     pop_reg
@@ -137,25 +149,9 @@ _writing_newline:
     pop_reg
     jmp _continue_writing
 
-; ; ------
-; ; _write():
-; ; Write to file
-; _writef:
-; ; > Input
-; ;   %1 : pointer to data to be written
-;     ; write line on file
-;     mov rax, 4                  ; kernel op code 4 to sys_write
-;     mov rbx, [fd_out]           ; move file descriptor of out file to ebx
-;     mov rcx, buffer                 ; write contents received
-;     mov rdx, 4                  ; write 6 bytes to new txt file
-;     int 80h 
-
-;     ret
 
 
-
-
-; ------
+; -------------------------------------------------------------------------------
 ; _openFiles()
 ; Open txt files
 _openFiles:
@@ -181,7 +177,7 @@ _openFiles:
 
     ret
 
-; ------
+; -------------------------------------------------------------------------------
 ; _closeFiles()
 ; Close txt files
 _closeFiles:
@@ -197,7 +193,7 @@ _closeFiles:
     
     ret
 
-; ------
+; -------------------------------------------------------------------------------
 ; _exit()
 ; exit system
 _exit:
@@ -207,29 +203,29 @@ _exit:
     int 0x80
 
 
+
+
+; -------------------------------------------------------------------------------
+
+
 section .data
-;97
-    index           dd 0
-    ARRAY_LENGTH    dd 83521
-    ARRAY_ROWS      dd 289
-; ; 10
-;     index           dd 0
-;     ARRAY_LENGTH    dd 100
-;     ARRAY_ROWS      dd 10
+    INDEX           dd 0
+    ARRAY_LENGTH    dd RESOLUTION
+    ARRAY_ROWS      dd PIXELS
 ; files
-    ; file_in     db  '../../files/image.txt', 0      ; name of input image file
-    file_in     db  '../../files/image97.txt', 0      ; name of input image file
+    file_in   db  '../../files/image.txt', 0      ; name of input image file
+    ; file_in     db  '../../fi/les/image97.txt', 0      ; name of input image file
     file_out    db  '../../files/image-i.txt', 0    ; name of output image file
 ; messages
-    msg1 db	'The current ARRAY is:',0xA,0xD
-    len1 equ $ - msg1
+    ; msg1 db	'The current ARRAY is:',0xA,0xD
+    ; len1 equ $ - msg1
     msg_space db	'',0x20
     msg_newline db	'',0xA
     MULTIPLIER  equ 100
-    ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)index
 
-    ; ARRAY TIMES 100 db 0                            ; matrix memory allocation
-    ARRAY TIMES 83521 db 0                            ; matrix memory allocation
+
+    ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)INDEX
+    ARRAY TIMES RESOLUTION db 0                            ; matrix memory allocation
 
 
 section .bss
