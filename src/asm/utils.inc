@@ -1,8 +1,20 @@
+; ; 97
+; RESOLUTION equ 83521
+; PIXELS equ 289
+
+; 10
+RESOLUTION equ 100
+PIXELS equ 10
+
+
+
+space       equ 32
+newline     equ 10
+tab         equ 09
+F           equ 70
+
 section	.data
-    space       equ 32
-    newline     equ 10
-    tab         equ 09
-    F           equ 70
+
     i           dw 0
     value       db 4; string buffer to store results
     strAsciiResult TIMES 3 db 0x30
@@ -168,14 +180,58 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 
 
 ; -------------------------------------------------------------------------------
-%macro vertical_interpolation 0
+%macro vertical_interpolation 4
 ; > Input
-; unknownIndex1 = currentIndex + PIXELS
-; unknownIndex2 = currentIndex + 2*PIXELS
-; knownIndex1 = currentIndex
-; knownIndex2 = currentIndex + 3*PIXELS
-    mov   ebx, 1
-    mov   ecx, %1   ; msg
-    mov   edx, %2   ; text len
-    int   80h
+;   edx current index address
+;   r10 current index num
+;   %1 = pointer to knownIndex1
+;   %2 = pointer to knownIndex2
+;   %3 = pointer to unknownIndex1
+;   %4 = pointer to unknownIndex2
+
+; > Output
+;   al = unknownUp - value
+;   bl = unknownDown - value
+;   cl = unknownIndex1
+;   dl = unknownIndex2
+
+
+
+; knownIndex1 = i
+    mov eax, r10d                ; load current index
+%%k1:
+    mov   ecx, PIXELS 
+%%k2:
+; knownIndex2 = i + 3*PIXELS
+    mov   eax, 3                ; move a 3 into eax
+    mul   ecx                   ; 3 * PIXELS
+    add   eax, r10d             ; i + 3*PIXELS
+    lea   rax, [rdx+rax]        ; effective address  =>  array[i + 3pixels]
+    mov   [%3], eax             ; change unknownIndex2 value
+
+; %%k3:
+; ; unknownIndex1 = i + PIXELS
+;     mov   eax, ecx              ; move PIXELS to eax
+;     add   eax, edx              ; i + PIXELS
+;     mov   [%4], eax             ; change unknownIndex1 value
+; ; %%k4:
+; ; unknownIndex2 = i + 2*PIXELS
+;     mov   eax, 2                ; move a 2 into eax
+;     mul   ecx                   ; 2 * PIXELS
+;     add   eax, edx              ; i + 2*PIXELS
+;     mov   [%5], eax             ; change unknownIndex2 value
+
+%%sop:
+    ; push  eax
+    
+
+
+
+
+
+
+    ; mov   ebx, 1
+    ; mov   ecx, %1   ; msg
+    ; mov   edx, %2   ; text len
+    ; int   80h
 %endmacro

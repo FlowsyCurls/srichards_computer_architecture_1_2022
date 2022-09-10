@@ -5,13 +5,7 @@
 %include "linux64.inc"
 %include "utils.inc"
 
-; ; 97
-; RESOLUTION equ 83521
-; PIXELS equ 289
 
-; 10
-RESOLUTION equ 100
-PIXELS equ 10
 
 section .text
         global _start
@@ -19,7 +13,7 @@ section .text
 _start:
     call _openFiles
     call _read
-    ; call _vertical_pixels
+    call _algorithm
     call _write
     call _closeFiles
     call _exit
@@ -74,14 +68,72 @@ _loadNewLine:
     jmp     _read
 
 ; -------------------------------------------------------------------------------
+_algorithm:
+    mov rax, 0
+    mov rbx, 0
+    mov rcx, 0
+    mov rdx, 0
+    mov r10, 0              ; i
+    mov r11, 0              ; j
+    mov r12, 0              ; 3*PIXELS
+    mov r13, 0              ; len(arr) - 3*PIXELES
 _vertical_pixels:
+
+
     ;; calculate vertical pixeles
-    
+a:  mov rdx, ARRAY
+
+; calculate 3*PIXELS
+    mov eax, PIXELS
+    mov bl, 3
+    mul bl
+    mov r12d, eax
+; get len(arr) - 3*PIXELES
+    movzx r13d, word[ARRAY_LENGTH]
+    sub r13d, r12d
+; loop
+_vertical_pixels_loop_j:
+    cmp r11d, PIXELS
+    jge _stop_loop_j
+
+    xor r10d, 0                             ; reset i to 0.
+; start loop i
+_vertical_pixels_loop_i:
+    cmp r10d, r13d
+    jge _stop_loop_i                        ; if i is greater or equal to arr len - 3*Pixels, done
+    add r10d, r11d                          ; i + j
+
+    add r10d, r12d
+    jmp _vertical_pixels_loop_i
+_stop_loop_i:
+
+; continue with loop j
+    add r11, 3
+    inc dl
+    jmp _vertical_pixels_loop_j
 
 
+; _vertical_pixels_loop_i:
+    ; cmp r11d, PIXELS
+    ; jge _stop_loop_i
+;     add r10d, r11d                              ; i+=j
+;      ; load address of current index to edx
+;     movzx ecx, byte[rdx]
+;     ; mov r10b, byte[rdx] 
+;     mov [knownIndex1], ecx  ; load value of the firt index
+;     ; vertical_interpolation knownIndex1, knownIndex2, unknownIndex1, unknownIndex2
+
+;     cmp r11d, r13d              ; if i is array len - 3 *pixels
+;     jmp _vertical_pixeles_loop
+
+    ; increase variables.
+
+; _stop_loop_i:
+
+_stop_loop_j:
 
 
-
+    ret
 
 
 
@@ -236,4 +288,8 @@ section .bss
     buffer      resd     1     ; buffer length
     byte_ctr    resd     1     ; current input sample
     ascii_value resd     3     ; stores the ascii output sample
-
+; algorithm
+    knownIndex1      resd     4     ; knownIndex1 variable
+    knownIndex2      resd     4     ; knownIndex2 variable
+    unknownIndex1    resd     4     ; unknownIndex1 variable
+    unknownIndex2    resd     4     ; unknownIndex2 variable

@@ -75,11 +75,11 @@ def bilinear_interpolation(arr, n):
     # First place values
     pprint_vector("\narray: ", arr)
     bucket = place_values(arr, bucket, k)
-    pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
+    pprint_matrix("\nUnfilled bucket: ", np.reshape(bucket, (10, 10)))
 
     # Now algorithm
     vertical_interpolation(bucket, k)
-    horizontal_interpolation(bucket, k)
+    # horizontal_interpolation(bucket, k)
 
 
 def vertical_interpolation(bucket, PIXELS):
@@ -90,23 +90,25 @@ def vertical_interpolation(bucket, PIXELS):
 
     # print(knUP, knDN, ukUP, ukDN)
 
-    for j in range(0, 10, 3):
-        for i in range(0, len(bucket)-30, 30):
+    for j in range(0, PIXELS, 3):
+        
+        for i in range(0, len(bucket)-3*PIXELS, 3*PIXELS):
             i += j
+            print("i:",i)
             unknownIndex1 = i + PIXELS
             unknownIndex2 = i + 2*PIXELS
             knownIndex1 = i
             knownIndex2 = i + 3*PIXELS
-
+            # print(knownIndex1, knownIndex2, unknownIndex1, unknownIndex2)
             knUP = bucket[knownIndex1]
             knDN = bucket[knownIndex2]
             ukUP = round((2/3)*knUP + (1/3)*knDN)
             ukDN = round((1/3)*knUP + (2/3)*knDN)
-            print(knUP, knDN, ukUP, ukDN)
+            # print(knUP, knDN, ukUP, ukDN)
             bucket[unknownIndex1] = ukUP
             bucket[unknownIndex2] = ukDN
 
-    pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
+    pprint_matrix("\nFilled bucket: ", np.reshape(bucket, (10, 10)))
 
 
 def horizontal_interpolation(bucket, PIXELS):
