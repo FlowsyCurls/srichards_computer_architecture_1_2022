@@ -1,6 +1,6 @@
 ;; nasm -felf64 -o algorithm-v2.o algorithm-v2.asm && ld -o algorithm-v2 algorithm-v2.o && ./algorithm-v2
 ;; gdb algorithm-v2
-;p /t(char[10])ARRAY
+;   p /u(char[10])ARRAY
 
 %include "linux64.inc"
 %include "utils.inc"
@@ -13,7 +13,7 @@ section .text
 _start:
     call _openFiles
     call _read
-    call _algorithm
+    ; call _algorithm
     call _write
     call _closeFiles
     call _exit
@@ -53,7 +53,7 @@ _loadSpace:
     load_to_array ARRAY, INDEX  ; load value
     ; bx is pointing to the index from the prev function
     add     bx, 0x3               ; increment the index by 3.
-    mov     [INDEX], bx         ; load new value to index
+    mov     [INDEX], bx           ; load new value to index
 
     jmp     _read
 
@@ -63,7 +63,7 @@ _loadSpace:
 _loadNewLine:
     load_to_array ARRAY, INDEX  ; load value
     ; bx is pointing to the index from the prev function
-    add     bx, 0x15               ; increment the INDEX by 21.
+    add     bx, PIXELS_MUL_BY_2+1               ; increment the INDEX by 2*PIXELS.
     mov     [INDEX], bx
     jmp     _read
 
@@ -92,6 +92,16 @@ a:  mov rdx, ARRAY
     movzx r13d, word[ARRAY_LENGTH]
     sub r13d, r12d
 ; loop
+
+_stop_loop_i:
+
+; continue with loop j
+    add r11, 3
+    inc dl
+    jmp _vertical_pixels_loop_j
+
+
+
 _vertical_pixels_loop_j:
     cmp r11d, PIXELS
     jge _stop_loop_j
@@ -105,12 +115,6 @@ _vertical_pixels_loop_i:
 
     add r10d, r12d
     jmp _vertical_pixels_loop_i
-_stop_loop_i:
-
-; continue with loop j
-    add r11, 3
-    inc dl
-    jmp _vertical_pixels_loop_j
 
 
 ; _vertical_pixels_loop_i:
@@ -150,26 +154,30 @@ _write:
     mov rdx, 0                  ; clear rdx
     mov r14, ARRAY              ; save pointer to initial value in array
 _writing:
-    mov al, byte[r14]           ; current value to analyze
+    movzx rax, byte[r14]           ; current value to analyze
+val:
     push_reg
 ; get ascii value
-    dec_to_ascii                  ; return array address in rax
+    dec_to_ascii                    ; return array address in rax
+                                    ; p /u(char[5])strAsciiResult
     call _writeASCII_3digits
+
 ; writing new line
-    movzx ecx, word[ARRAY_ROWS]     ; save number of rows to know when to make new line.
+    mov rcx, PIXELS                 ; save number of columns to know when to make new line.
     mov rax, r15                    ; move counter value to rax
     mov rdx, 0                      ; reset rdx to prevent error in division
     div rcx                         ; EDX =   0 = 97 % 97  (remainder)
     cmp dx, 0
     jz _writing_newline
-; writing space
+; ; writing space
     write msg_space, 1
+
 _continue_writing:
     pop_reg
     add r15d, 1
-    inc r14b
+    add r14, 1
 ; stop condition
-    movzx r13d, word[ARRAY_LENGTH]
+    mov r13, ARRAY_LENGTH
     add r13, 1
     cmp r15, r13             
     jne _writing                    ; If counter is equal to array length stop.
@@ -262,8 +270,7 @@ _exit:
 
 section .data
     INDEX           dd 0
-    ARRAY_LENGTH    dd RESOLUTION
-    ARRAY_ROWS      dd PIXELS
+
 ; files
     file_in   db  '../../files/image.txt', 0      ; name of input image file
     ; file_in     db  '../../fi/les/image97.txt', 0      ; name of input image file
@@ -271,13 +278,13 @@ section .data
 ; messages
     ; msg1 db	'The current ARRAY is:',0xA,0xD
     ; len1 equ $ - msg1
-    msg_space db	'',0x20
+    msg_space db	'',32
     msg_newline db	'',0xA
     MULTIPLIER  equ 100
 
 
     ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)INDEX
-    ARRAY TIMES RESOLUTION db 0                            ; matrix memory allocation
+    ARRAY TIMES ARRAY_LENGTH db 0                            ; matrix memory allocation
 
 
 section .bss
