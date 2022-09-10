@@ -5,11 +5,10 @@ filename = "image.txt"
 filename = os.path.join(os.getcwd(), 'files', filename)
 
 
-
 def algorithm(matrix):
     print_matrix(matrix)
     write_file(matrix)
-    
+
 # Parse a np matrix to a list
 
 
@@ -79,37 +78,61 @@ def bilinear_interpolation(arr, n):
     pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
 
     # Now algorithm
-    vertical_interpolation(bucket, k,)
+    vertical_interpolation(bucket, k)
+    horizontal_interpolation(bucket, k)
 
 
 def vertical_interpolation(bucket, PIXELS):
-# unknownIndex1 = currentIndex + PIXELS
-# unknownIndex2 = currentIndex + 2*PIXELS
-# knownIndex1 = currentIndex
-# knownIndex2 = currentIndex + 3*PIXELS
+    # unknownIndex1 = currentIndex + PIXELS
+    # unknownIndex2 = currentIndex + 2*PIXELS
+    # knownIndex1 = currentIndex
+    # knownIndex2 = currentIndex + 3*PIXELS
 
     # print(knUP, knDN, ukUP, ukDN)
-    
-    for j in range (0, 10,3): 
+
+    for j in range(0, 10, 3):
         for i in range(0, len(bucket)-30, 30):
-            i+=j
+            i += j
             unknownIndex1 = i + PIXELS
             unknownIndex2 = i + 2*PIXELS
             knownIndex1 = i
             knownIndex2 = i + 3*PIXELS
-            
+
             knUP = bucket[knownIndex1]
             knDN = bucket[knownIndex2]
             ukUP = round((2/3)*knUP + (1/3)*knDN)
             ukDN = round((1/3)*knUP + (2/3)*knDN)
             print(knUP, knDN, ukUP, ukDN)
-            bucket[unknownIndex1]  = ukUP
-            bucket[unknownIndex2]  = ukDN
+            bucket[unknownIndex1] = ukUP
+            bucket[unknownIndex2] = ukDN
 
     pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
-    
-    
-    
+
+
+def horizontal_interpolation(bucket, PIXELS):
+
+    r = 0
+    i = 0
+    # for i in range(0, len(bucket)-3, 3):
+    while (i < (len(bucket)-3)):
+
+        # print("\ni:  ", i, "  PIXELS ", PIXELS)
+        for r in range(0, i+r*PIXELS < (len(bucket))):
+            knownIndex1 = i + r*PIXELS
+            knownIndex2 = knownIndex1 + 3
+            unknownIndex1 = knownIndex1 + 1
+            unknownIndex2 = knownIndex1 + 2
+            ukLF = round((2/3)*bucket[knownIndex1] + (1/3)*bucket[knownIndex2])
+            ukRG = round((1/3)*bucket[knownIndex1] + (2/3)*bucket[knownIndex2])
+            bucket[unknownIndex1] = ukLF
+            bucket[unknownIndex2] = ukRG
+            
+        i+=3
+        if ((i!=0) and ((i+1)%PIXELS==0)):
+            i+=1
+            
+    pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
+
 
 def place_values(arr, bucket, k, base=1, n=0, i=0):
     if (n > len(bucket)-1):
