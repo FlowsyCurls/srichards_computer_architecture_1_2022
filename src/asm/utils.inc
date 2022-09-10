@@ -1,14 +1,17 @@
 section	.data
-space       equ 32
-newline     equ 10
-tab         equ 09
-F           equ 70
-i           dw 0
-value       db 4; string buffer to store results
-; strAsciiResult db 3 dup (0)
-section .bss
-strAsciiResult    resd     4
+    space       equ 32
+    newline     equ 10
+    tab         equ 09
+    F           equ 70
+    i           dw 0
+    value       db 4; string buffer to store results
+    strAsciiResult TIMES 3 db 0
 
+
+section .bss
+    ; asciiResult    resd     4
+
+    
 ; ------
 ; push_reg()
 ; Function that pushes all registers to stack
@@ -115,15 +118,17 @@ div ebx ; Divides eax = 1234 by ebx = 3.
     jnz %%divide                    ; no, continue
 
     ; POP digits from stack in reverse order
-    mov cx, bx                      ; number of digits / LOOP uses ecx to stop
+    movzx rcx, bx                   ; number of digits / LOOP uses ecx to stop [zero extend]
     mov rsi, strAsciiResult         ; DS:SI points to string buffer
+                                    ; p /u(char[4])strAsciiResult
 %%next_digit:
     pop rax
     add al, '0'                     ; convert to ASCII
-    mov [rsi+rcx], al    ; write it to the buffer
+    lea rbx, [rsi]
+    mov [rbx], al                   ; write it to the buffer
     inc si
     loop %%next_digit
-    mov rax, [strAsciiResult]       ; return value in rax
+    mov rax, strAsciiResult         ; return pointer in rax
 
 ; ; conversion from ASCII to dec
 ;     add     rax, 48             ; add 48('0') to get ascii on rax
@@ -168,7 +173,7 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 %endmacro
 
 
-%macro write 1
+%macro write 2
 ; ------
 ; _write():
 ; Write to file
@@ -178,7 +183,7 @@ div ebx ; Divides eax = 1234 by ebx = 3.
     mov rax, 4                  ; kernel op code 4 to sys_write
     mov rbx, [fd_out]           ; move file descriptor of out file to ebx
     mov rcx, %1                 ; write contents received
-    mov rdx, 4                  ; write 6 bytes to new txt file
+    mov rdx, %2                  ; write 6 bytes to new txt file
     int 80h                     ; os execute
 %endmacro
 

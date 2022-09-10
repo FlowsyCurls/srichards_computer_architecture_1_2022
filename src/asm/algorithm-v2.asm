@@ -6,24 +6,33 @@
 %include "utils.inc"
 section .data
     
-;modify array size, array len
-
-    ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)index
-    ARRAY TIMES 100 db 0                            ; matrix memory allocation
+;modify array size, array len, array rows, file
+; 97
+    ARRAY TIMES 83521 db 0                            ; matrix memory allocation
     index           dd 0
-    ARRAY_LENGTH    dd 100
+    ARRAY_LENGTH    dd 289
+    ARRAY_ROWS      dd 289
+    file_in     db  '../../files/image97.txt', 0      ; name of input image file
 
-    ; file_in     db  '../../files/image97.txt', 0      ; name of input image file
-    file_in     db  '../../files/image.txt', 0      ; name of input image file
+; ; 10
+;     ARRAY TIMES 100 db 0                            ; matrix memory allocation
+;     index           dd 0
+;     ARRAY_LENGTH    dd 100
+;     ARRAY_ROWS      dd 10
+;     file_in     db  '../../files/image.txt', 0      ; name of input image file
+
+
     file_out    db  '../../files/image-i.txt', 0    ; name of output image file
 
     ; messages
     msg1 db	'The current ARRAY is:',0xA,0xD
-    msg_space db	'000',0x20
-    msg_newline db	'   ',0xA
     len1 equ $ - msg1
-
+    msg_space db	'',0x20
+    msg_newline db	'',0xA
     MULTIPLIER  equ 100
+
+
+    ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)index
 
 section .bss
 ; file management
@@ -44,7 +53,7 @@ _start:
     call _openFiles
     call _read
     ; call _vertical_pixels
-    ; call _write
+    call _write
     call _closeFiles
     call _exit
 
@@ -62,24 +71,18 @@ _read:
     ascii_to_dec buffer, MULTIPLIER        ; return decimal value in rax
     mov  r10b, byte[rdx]      ; read in dl forth byte at pointer rdx (buffer ptr)
 
-; ;#####################
-;     push_reg
-;     write buffer
-;     pop_reg
-; ;######################
-
-b3:
 ; conditions
     cmp  r10, space             ; compare number in rax to (space ~32) to determine end of num in buffer
     jz   _loadSpace             ; break if analyzed byte is ' ' (end of number)
-b4:
+
     cmp  r10, newline           ; compare number in rax to (new line ~10) to determine end of line in buffer
     jz   _loadNewLine           ; break if analyzed byte is '\n' (end of line)
 ;loop
 
     cmp  r10, F                 ; compare number in rax to (F ~70) to determine end of file in buffer
-t:  jne   _read                 ; break if analyzed byte is 'F' (end of file)
+    jne   _read                 ; break if analyzed byte is 'F' (end of file)
 
+    load_to_array ARRAY, index  ; load value
     ret
 
 ; ------
@@ -90,10 +93,7 @@ _loadSpace:
     ; bx is pointing to the index from the prev function
     add     bx, 0x3               ; increment the index by 3.
     mov     [index], bx         ; load new value to index
-; #####################
-    ; write msg_space
-    ; write msg_space
-; ######################
+
     jmp     _read
 
 ; ------
@@ -114,45 +114,90 @@ _vertical_pixels:
 ; _write():
 ; Write to output file
 _write:
-    ; mov rdx, ARRAY                ; in rdx save pointer to ARRAY
-    ; mov rdx, ARRAY
-    mov rdx, ARRAY              ; save pointer to initial value in array
-    xor rcx, rcx                ; set counter
+    mov r15, 1                  ; set counter to 1 - 0 is module of any number, to prevent new line we start in 1
+    mov rax, 0                  ; clear rax
+    mov rcx, 0                  ; clear rcx
+    mov rbx, 0                  ; clear rbx
+    mov rdx, 0                  ; clear rdx
+    mov r14, ARRAY              ; save pointer to initial value in array
 _writing:
-    ; mov al, byte[rdx/]           ; number to be converted
-    ; push_reg
-    ; dec_to_ascii
-    ; pop_reg
-    ; mov output_ptr, rdx
-    ; push rax
-    ; push rax
-    ; call _writeASCII_3digits
-    ; pop rax
-_writing_start:
-    cmp ecx, ARRAY_LENGTH
-    jge _writing_end
-    mov al, byte[ARRAY]
 
-    add ecx, 1
-    jmp _writing_start
-_writing_end:
+
+    mov al, byte[r14]           ; current value to analyze
+;     ; push rcx
+    push_reg
+; get ascii value
+
+    dec_to_ascii                  ; return array address in rax
+    call _writeASCII_3digits
+
+; writing new line
+    movzx ecx, word[ARRAY_ROWS]     ; save number of rows to know when to make new line.
+    mov rax, r15                    ; move counter value to rax
+    mov rdx, 0                      ; reset rdx to prevent error in division
+    div rcx                         ; EDX =   0 = 97 % 97  (remainder)
+    cmp dx, 0
+w:  jz _writing_newline
+
+; writing space
+    write msg_space, 1
+
+_continue_writing:
+    pop_reg
+a:
+    add r15d, 1
+    inc r14b
+v:
+; stop condition
+    movzx r13d, word[ARRAY_LENGTH]
+c:    add r13, 1
+    cmp r15, r13             
+    jne _writing                    ; If counter is equal to array length stop.
+
     ret
-
 
 ; _writeASCIInum()
 ; Write digit of ascii to txt
 _writeASCII_3digits:
-    mov rcx, 2
-    mov rax, buffer
-_write_ascii_3digits_loop:
-    mov bl, [ascii_value+rcx]
-    mov [rax], bl
+; array address in rax
+    mov sil, 3                      ; number of iterations 3
+    xor cl, cl                      ; set counter
+    mov rdx, buffer                 ; load buffer address
+_writing_ascii_3digits_loop:
+    mov bl, [rax+rcx]               ; load value in efective address
+    mov byte[rax+rcx], 0x30         ; load a 0 to value in efective address
+    mov [rdx], bl                   ; save value in buffer
     push_reg
-    write buffer
+    write buffer, 1                    ; write buffer
     pop_reg
-    loop _write_ascii_3digits_loop
-
+    inc cl
+    cmp cl, sil
+    jne _writing_ascii_3digits_loop ; if counter is greater or equal to 3, get out
     ret
+
+_writing_newline:
+    push_reg
+    write msg_newline, 1
+    pop_reg
+    jmp _continue_writing
+
+; ; ------
+; ; _write():
+; ; Write to file
+; _writef:
+; ; > Input
+; ;   %1 : pointer to data to be written
+;     ; write line on file
+;     mov rax, 4                  ; kernel op code 4 to sys_write
+;     mov rbx, [fd_out]           ; move file descriptor of out file to ebx
+;     mov rcx, buffer                 ; write contents received
+;     mov rdx, 4                  ; write 6 bytes to new txt file
+;     int 80h 
+
+;     ret
+
+
+
 
 ; ------
 ; _openFiles()
