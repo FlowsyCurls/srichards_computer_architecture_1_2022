@@ -79,7 +79,7 @@ def bilinear_interpolation(arr, n):
 
     # Now algorithm
     vertical_interpolation(bucket, k)
-    # horizontal_interpolation(bucket, k)
+    horizontal_interpolation(bucket, k)
 
 
 def vertical_interpolation(bucket, PIXELS):
@@ -89,12 +89,12 @@ def vertical_interpolation(bucket, PIXELS):
     # knownIndex2 = currentIndex + 3*PIXELS
 
     # print(knUP, knDN, ukUP, ukDN)
-    i,j = 0,0
+    i, j = 0, 0
     while (j < PIXELS):
-        i=0
+        i = 0
         while (i < len(bucket)-3*PIXELS):
             i += j
-            print("i:",i)
+            # print("i:", i)
             unknownIndex1 = i + PIXELS
             unknownIndex2 = i + 2*PIXELS
             knownIndex1 = i
@@ -103,26 +103,26 @@ def vertical_interpolation(bucket, PIXELS):
             knUP = bucket[knownIndex1]
             knDN = bucket[knownIndex2]
             ukUP = round((2/3)*knUP + (1/3)*knDN)
-            ukDN = round((2/3)*knDN + (1/3)*knUP )
+            ukDN = round((2/3)*knDN + (1/3)*knUP)
             # print(knUP, knDN, ukUP, ukDN)
             bucket[unknownIndex1] = ukUP
             bucket[unknownIndex2] = ukDN
-            i+=3*PIXELS
-        j+=3
-            
-    pprint_matrix("\nFilled bucket: ", np.reshape(bucket, (10, 10)))
+            i += 3*PIXELS
+        j += 3
+
+    # pprint_matrix("\nFilled bucket: ", np.reshape(bucket, (10, 10)))
 
 
 def horizontal_interpolation(bucket, PIXELS):
 
-    r = 0
     i = 0
+    j = 0
     # for i in range(0, len(bucket)-3, 3):
-    while (i < (len(bucket)-3)):
-
+    while (j < (len(bucket)-3)):
+        # print("j:", j)
         # print("\ni:  ", i, "  PIXELS ", PIXELS)
-        for r in range(0, i+r*PIXELS < (len(bucket))):
-            knownIndex1 = i + r*PIXELS
+        for i in range(0, j+i*PIXELS < (len(bucket))):
+            knownIndex1 = j + i*PIXELS
             knownIndex2 = knownIndex1 + 3
             unknownIndex1 = knownIndex1 + 1
             unknownIndex2 = knownIndex1 + 2
@@ -130,11 +130,13 @@ def horizontal_interpolation(bucket, PIXELS):
             ukRG = round((2*bucket[knownIndex2])//3 + (bucket[knownIndex1]//3))
             bucket[unknownIndex1] = ukLF
             bucket[unknownIndex2] = ukRG
-            
-        i+=3
-        if ((i!=0) and ((i+1)%PIXELS==0)):
-            i+=1
-            
+
+        j += 3
+        if ((j != 0) and ((j+1) % PIXELS == 0)):
+            print("\nchanged:  ", j)
+            j += 1
+            print("to:  ", j)
+
     pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
 
 
@@ -187,9 +189,9 @@ def bilinear_interpolate_aux(A, B, C, D):
 # print(im[4][:16])
 # print(im[5][:16])
 
-# arr = read_file()
-# bilinear_interpolation(arr, 4)
+arr = read_file()
+bilinear_interpolation(arr, 4)
 
-x, y  = 10,20
+# x, y = 10, 20
 
 # print(2*)

@@ -71,7 +71,7 @@ _read:
     cmp  r10, F                 ; compare number in rax to (F ~70) to determine end of file in buffer
     jne   _read                 ; break if analyzed byte is 'F' (end of file)
     load_to_array ARRAY, INDEX  ; load value
-    
+    xor r10, r10                ; clear r10
     ret
 
 
@@ -104,7 +104,7 @@ _loadNewLine:
 ; This function is in charge of calling the functions that do the interpolation.
 _bilinear_interpolation:
     call _vertical_pixels
-
+    call _horizontal_pixels
     ret
 
 ; ------
@@ -112,7 +112,6 @@ _bilinear_interpolation:
 ; Does the vertical interpolation and save values to their positions.
 _vertical_pixels:
 ;; calculate vertical pixeles
-    mov rbp, ARRAY              ; get array start pointer to the base pointer
     clear_reg
     xor r15, 0                  ; j - for j in range(0, PIXELS, 3):
     jmp _vertical_loop_j
@@ -132,7 +131,7 @@ _vertical_loop_j:
     mov r14, 0                  ; i - for i in range(0, len(array)-3*PIXELS, 3*PIXELS)
     add r14, r15                ; i += j
     jmp _vertical_loop_i
-_continue_loop_j:
+_continue_vertical_loop_j:
     pop r15
 ; increase references
     add r15, 3                  ; add 3 to counter
@@ -145,7 +144,7 @@ _continue_loop_j:
 _vertical_loop_i:
 ; stop condition
     cmp r14, ARRAY_LENGTH_MINUS_3PIXELS             
-    jge _continue_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
+    jge _continue_vertical_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
     push r14
 ; call arithmethic procedure
     clear_reg
@@ -192,6 +191,73 @@ _vertical_arithmetic:
     ret
 
 
+
+; ------
+; _horizontal_pixels():
+; Does the horizontal interpolation and save values to their positions.
+_horizontal_pixels:
+;; calculate horizontal pixeles
+    clear_reg
+    mov r15, 0                  ; j -  while (j < (len(bucket)-3)):
+    mov r14, 0
+    jmp _horizontal_loop_j
+_horizontal_pixels_end:
+    ret
+
+
+; ------
+; _horizontal_loop_j():
+; Intermediate loop for columns
+_horizontal_loop_j:
+; stop condition
+    cmp r15, ARRAY_LENGTH-3
+    jge _horizontal_pixels_end    ; for j in range(0, (len(bucket)-3), 3)
+    push r15
+
+; -------------------------------------------------------------------
+; call horizontal loop with r procedure
+    ; mov r14, 0                  ; r - for r in range(0, j+r*PIXELS < (len(ARRAY)))
+    ; jmp _horizontal_loop_i
+; -------------------------------------------------------------------
+
+_continue_horizontal_loop_j:
+    pop r15
+; increase references
+    add r15, 3                      ; j += 3
+; if j == 0 then keep forward
+    test r15, r15                   ; r15 is 0?
+    jz _horizontal_loop_j
+; analized mod PIXELS
+    xor dx, dx
+    mov ax, r15w
+    add ax, 1
+    mov bx, PIXELS
+    div bx
+    ; DX is 0? (remainder) If j % PIXEL, then j+=1
+    test dx, dx                    
+    jnz _horizontal_loop_j          ; no, continue
+    add  r15, 1                     ; j++
+    
+    jmp _horizontal_loop_j
+
+
+; ------
+; _horizontal_loop_i():
+; Intermediate loop for rows.
+_horizontal_loop_i:
+; stop condition
+    cmp r14, ARRAY_LENGTH_MINUS_3PIXELS             
+    jge _continue_horizontal_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
+    push r14
+; call arithmethic procedure
+    clear_reg
+    ; call _horizontal_arithmetic
+    pop r14
+; increase references
+    add r14, PIXELS_MUL_BY_3    ; add 3*PIXELS to counter
+    jmp _horizontal_loop_i
+
+    
 
 ; ________________________________________________________________________________________________________________
 ; _write():
