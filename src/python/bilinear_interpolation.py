@@ -126,8 +126,8 @@ def horizontal_interpolation(bucket, PIXELS):
             knownIndex2 = knownIndex1 + 3
             unknownIndex1 = knownIndex1 + 1
             unknownIndex2 = knownIndex1 + 2
-            ukLF = round((2/3)*bucket[knownIndex1] + (1/3)*bucket[knownIndex2])
-            ukRG = round((1/3)*bucket[knownIndex1] + (2/3)*bucket[knownIndex2])
+            ukLF = round((2*bucket[knownIndex1])//3 + (bucket[knownIndex2]//3))
+            ukRG = round((2*bucket[knownIndex2])//3 + (bucket[knownIndex1]//3))
             bucket[unknownIndex1] = ukLF
             bucket[unknownIndex2] = ukRG
             
@@ -187,5 +187,9 @@ def bilinear_interpolate_aux(A, B, C, D):
 # print(im[4][:16])
 # print(im[5][:16])
 
-arr = read_file()
-bilinear_interpolation(arr, 4)
+# arr = read_file()
+# bilinear_interpolation(arr, 4)
+
+x, y  = 10,20
+
+# print(2*)

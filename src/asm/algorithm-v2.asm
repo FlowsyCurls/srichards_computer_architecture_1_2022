@@ -1,6 +1,7 @@
-;; nasm -felf64 -o algorithm-v2.o algorithm-v2.asm && ld -o algorithm-v2 algorithm-v2.o && ./algorithm-v2
-;; gdb algorithm-v2
-;   p /u(char[10])ARRAY
+; nasm -felf64 -o algorithm-v2.o algorithm-v2.asm && ld -o algorithm-v2 algorithm-v2.o && ./algorithm-v2
+; gdb algorithm-v2
+;   p /u(char[100])ARRAY
+
 
 %include "linux64.inc"
 %include "utils.inc"
@@ -13,241 +14,14 @@ section .text
 _start:
     call _openFiles
     call _read
-    call _algorithm
+    call _bilinear_interpolation
     call _write
     call _closeFiles
     call _exit
 
-; -------------------------------------------------------------------------------
-; _read()
-; Read file contents
-_read:
-    mov rax, 3                ; kernel op code 3 sys_read
-    mov rbx, [fd_in]          ; store descriptor in rbx
-    mov rcx, buffer           ; store input line on rcx
-    mov rdx, 4                ; amount of bytes read on rdx
-    int 80h                   ; os execute
-
-; load number
-    ascii_to_dec buffer, MULTIPLIER        ; return decimal value in rax
-    mov  r10b, byte[rdx]      ; read in dl forth byte at pointer rdx (buffer ptr)
-
-; conditions
-    cmp  r10, space             ; compare number in rax to (space ~32) to determine end of num in buffer
-    jz   _loadSpace             ; break if analyzed byte is ' ' (end of number)
-
-    cmp  r10, newline           ; compare number in rax to (new line ~10) to determine end of line in buffer
-    jz   _loadNewLine           ; break if analyzed byte is '\n' (end of line)
-;loop
-
-    cmp  r10, F                 ; compare number in rax to (F ~70) to determine end of file in buffer
-    jne   _read                 ; break if analyzed byte is 'F' (end of file)
-
-    load_to_array ARRAY, INDEX  ; load value
-    ret
-
-; ------
-; _loadSpace():
-; Load al into ARRAY[INDEX], also index increase by 3.
-_loadSpace:
-    load_to_array ARRAY, INDEX  ; load value
-    ; bx is pointing to the index from the prev function
-    add     bx, 0x3               ; increment the index by 3.
-    mov     [INDEX], bx           ; load new value to index
-
-    jmp     _read
-
-; ------
-; _loadNewLine():
-; Load al into ARRAY[INDEX], also index increase by 21.
-_loadNewLine:
-    load_to_array ARRAY, INDEX  ; load value
-    ; bx is pointing to the index from the prev function
-    add     bx, PIXELS_MUL_BY_2+1               ; increment the INDEX by 2*PIXELS.
-    mov     [INDEX], bx
-    jmp     _read
-
-; -------------------------------------------------------------------------------
-_algorithm:
 
 
-; TESTING
-; b _vertical_pixels
-; b _vertical_loop_j
-; i r rdx r15
-_vertical_pixels:
-;; calculate vertical pixeles
-    mov rbp, ARRAY              ; get array start pointer to the base pointer
-    clear_reg
-    xor r15, 0                  ; j - for j in range(0, PIXELS, 3):
-    jmp _vertical_loop_j
-_vertical_pixels_end:
-    ret
-
-
-_vertical_loop_j:
-; stop condition
-    cmp r15, PIXELS             
-    jge _vertical_pixels_end    ; If counter is greather or equal PIXELS, then stop
-    push r15
-; call vertical loop with i procedure
-    mov r14, 0                  ; i - for i in range(0, len(array)-3*PIXELS, 3*PIXELS)
-    add r14, r15                ; i += j
-    jmp _vertical_loop_i
-_continue_loop_j:
-    pop r15
-; increase references
-    add r15, 3                  ; add 3 to counter
-    jmp _vertical_loop_j
-
-_vertical_loop_i:
-; stop condition
-    cmp r14, ARRAY_LENGTH_MINUS_3PIXELS             
-    jge _continue_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
-    push r14
-; call arithmethic procedure
-    clear_reg
-    call _vertical_arithmetic
-t:
-    pop r14
-; increase references
-    add r14, PIXELS_MUL_BY_3    ; add 3*PIXELS to counter
-    jmp _vertical_loop_i
-
-
-_vertical_arithmetic:
-    clear_reg
-
-; knownIndex1
-    mov bl, byte[ARRAY+r14]     ; load value at relative address to bl (low-order 8 bits)
-
-; knownIndex2
-    mov rax, r14                ; copy i value to rax
-    mov rax, PIXELS_MUL_BY_3    ; i + 3*PIXELS
-    mov bh, byte[ARRAY+rax]     ; load value at relative address to bh (high-order 8 bits)
-
-; unknownIndex1
-    mov rax, r14                ; copy i value to rax
-    add rax, PIXELS             ; i + PIXELS
-    ; mov [unknownIndex1], rax    ; save in unknownIndex1
-    lea rsi, [ARRAY+rax]        ; load relative address to rsi
-
-; unknownIndex2
-    mov rax, r14                ; copy i value to rax
-    add rax, PIXELS_MUL_BY_2    ; i + 2*PIXELS
-    ; mov [unknownIndex2], rax  ; save in unknownIndex2
-    lea rdi, [ARRAY+rax]        ; load relative address to rsi
-
-
-; till  here we have:
-;   bl = knownValue1
-;   bh = knownValue2
-    ; xor rax, rax                ; clear rax
-    ; xor rdx, rdx                ; clear rdx
-    call _calc_067_then_033
-    
-    ret
-    ; lea rsi, [ARRAY+]
-
-
-_calc_067_then_033:
-; > OUTPUT
-;    cl = unknownValue
-
-; cl = (2 * x) // 3
-    xor  rax, rax           ; clear rax
-    mov  al, bl             ; move bl in al (as numbers are just 1 byte) [zero extend]
-    mov  dl, 2              ; move a 2 in dl (multiplier)
-    mul  dl                 ; AX (product) => (2 * x)
-    mov  dl, 3              ; move a 3 in dl (divisor)
-    div  dl                 ; AL (quotient) => (2 * y) // 3
-    mov cl, al              ; move al to r8b. (8bits) 0-255
-; cl += (1 * y) // 3
-z: 
-    xor  rax, rax           ; clear rax
-    mov  al, bh             ; move bh in al
-    mov  dl, 3              ; move a 3 in dl (divisor)
-    div  dl                 ; AL (quotient) => knownValue2 // 3
-    add  cl, al             ; add to r8b the value in al (8bits)
-x:
-    ret
-
-    ; i r bl bh al dl cl
-
-; _stop_loop_i:
-
-
-
-
-; -------------------------------------------------------------------------------
-; _write():
-; Write to output file
-_write:
-    mov r15, 1                  ; set counter to 1 - 0 is module of any number, to prevent new line we start in 1
-    mov rax, 0                  ; clear rax
-    mov rcx, 0                  ; clear rcx
-    mov rbx, 0                  ; clear rbx
-    mov rdx, 0                  ; clear rdx
-    mov r14, ARRAY              ; save pointer to initial value in array
-_writing:
-    movzx rax, byte[r14]           ; current value to analyze
-val:
-    push_reg
-; get ascii value
-    dec_to_ascii                    ; return array address in rax
-                                    ; p /u(char[5])strAsciiResult
-    call _writeASCII_3digits
-
-; writing new line
-    mov rcx, PIXELS                 ; save number of columns to know when to make new line.
-    mov rax, r15                    ; move counter value to rax
-    mov rdx, 0                      ; reset rdx to prevent error in division
-    div rcx                         ; EDX =   0 = 97 % 97  (remainder)
-    cmp dx, 0
-    jz _writing_newline
-; ; writing space
-    write msg_space, 1
-
-_continue_writing:
-    pop_reg
-    add r15d, 1
-    add r14, 1
-; stop condition
-    mov r13, ARRAY_LENGTH
-    add r13, 1
-    cmp r15, r13             
-    jne _writing                    ; If counter is equal to array length stop.
-
-    ret
-
-; _writeASCIInum()
-; Write digit of ascii to txt
-_writeASCII_3digits:
-; array address in rax
-    mov sil, 3                      ; number of iterations 3
-    xor cl, cl                      ; set counter
-    mov rdx, buffer                 ; load buffer address
-_writing_ascii_3digits_loop:
-    mov bl, [rax+rcx]               ; load value in efective address
-    mov byte[rax+rcx], 0x30         ; load a 0 to value in efective address
-    mov [rdx], bl                   ; save value in buffer
-    push_reg
-    write buffer, 1                    ; write buffer
-    pop_reg
-    inc cl
-    cmp cl, sil
-    jne _writing_ascii_3digits_loop ; if counter is greater or equal to 3, get out
-    ret
-
-_writing_newline:
-    push_reg
-    write msg_newline, 1
-    pop_reg
-    jmp _continue_writing
-
-
-
-; -------------------------------------------------------------------------------
+; ________________________________________________________________________________________________________________
 ; _openFiles()
 ; Open txt files
 _openFiles:
@@ -273,7 +47,222 @@ _openFiles:
 
     ret
 
-; -------------------------------------------------------------------------------
+
+
+; ________________________________________________________________________________________________________________
+; _read()
+; Read file contents
+_read:
+    mov rax, 3                ; kernel op code 3 sys_read
+    mov rbx, [fd_in]          ; store descriptor in rbx
+    mov rcx, buffer           ; store input line on rcx
+    mov rdx, 4                ; amount of bytes read on rdx
+    int 80h                   ; os execute
+; load number
+    ascii_to_dec buffer, MULTIPLIER        ; return decimal value in rax
+    mov  r10b, byte[rdx]      ; read in dl forth byte at pointer rdx (buffer ptr)
+; conditions
+    cmp  r10, space             ; compare number in rax to (space ~32) to determine end of num in buffer
+    jz   _loadSpace             ; break if analyzed byte is ' ' (end of number)
+
+    cmp  r10, newline           ; compare number in rax to (new line ~10) to determine end of line in buffer
+    jz   _loadNewLine           ; break if analyzed byte is '\n' (end of line)
+;loop
+    cmp  r10, F                 ; compare number in rax to (F ~70) to determine end of file in buffer
+    jne   _read                 ; break if analyzed byte is 'F' (end of file)
+    load_to_array ARRAY, INDEX  ; load value
+    
+    ret
+
+
+; ------
+; _loadSpace():
+; Load al into ARRAY[INDEX], also index increase by 3.
+_loadSpace:
+    load_to_array ARRAY, INDEX  ; load value
+    ; bx is pointing to the index from the prev function
+    add     bx, 0x3               ; increment the index by 3.
+    mov     [INDEX], bx           ; load new value to index
+
+    jmp     _read
+
+
+; ------
+; _loadNewLine():
+; Load al into ARRAY[INDEX], also index increase by 2*PIXELS+1.
+_loadNewLine:
+    load_to_array ARRAY, INDEX  ; load value
+    ; bx is pointing to the index from the prev function
+    add     bx, PIXELS_MUL_BY_2+1               ; increment the INDEX by 2*PIXELS.
+    mov     [INDEX], bx
+    jmp     _read
+
+
+
+; ________________________________________________________________________________________________________________
+; _bilinear_interpolation():
+; This function is in charge of calling the functions that do the interpolation.
+_bilinear_interpolation:
+    call _vertical_pixels
+
+    ret
+
+; ------
+; _vertical_pixels():
+; Does the vertical interpolation and save values to their positions.
+_vertical_pixels:
+;; calculate vertical pixeles
+    mov rbp, ARRAY              ; get array start pointer to the base pointer
+    clear_reg
+    xor r15, 0                  ; j - for j in range(0, PIXELS, 3):
+    jmp _vertical_loop_j
+_vertical_pixels_end:
+    ret
+
+
+; ------
+; _vertical_loop_j():
+; Intermediate loop for columns
+_vertical_loop_j:
+; stop condition
+    cmp r15, PIXELS             
+    jge _vertical_pixels_end    ; If counter is greather or equal PIXELS, then stop
+    push r15
+; call vertical loop with i procedure
+    mov r14, 0                  ; i - for i in range(0, len(array)-3*PIXELS, 3*PIXELS)
+    add r14, r15                ; i += j
+    jmp _vertical_loop_i
+_continue_loop_j:
+    pop r15
+; increase references
+    add r15, 3                  ; add 3 to counter
+    jmp _vertical_loop_j
+
+
+; ------
+; _vertical_loop_i():
+; Intermediate loop for rows.
+_vertical_loop_i:
+; stop condition
+    cmp r14, ARRAY_LENGTH_MINUS_3PIXELS             
+    jge _continue_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
+    push r14
+; call arithmethic procedure
+    clear_reg
+    call _vertical_arithmetic
+    pop r14
+; increase references
+    add r14, PIXELS_MUL_BY_3    ; add 3*PIXELS to counter
+    jmp _vertical_loop_i
+
+
+; ------
+; _vertical_arithmetic():
+; This function determines the corresponding index and performs the algebraic calculation, 
+; then stores it where it should be.
+_vertical_arithmetic:
+    clear_reg
+; knownIndex1
+    mov bl, byte[ARRAY+r14]     ; load value at relative address to bl (low-order 8 bits)
+; knownIndex2
+    mov rax, r14                ; copy i value to rax
+    add rax, PIXELS_MUL_BY_3    ; i + 3*PIXELS
+    mov bh, byte[ARRAY+rax]     ; load value at relative address to bh (high-order 8 bits)
+; unknownIndex1   -  p /u(char)unknownIndex1
+    mov rax, r14                ; copy i value to rax
+    add rax, PIXELS             ; i + PIXELS
+    mov [unknownIndex1], rax    ; save in unknownIndex1
+; unknownIndex2   -  p /u(char)unknownIndex2
+    mov rax, r14                ; copy i value to rax
+    add rax, PIXELS_MUL_BY_2    ; i + 2*PIXELS
+    mov [unknownIndex2], rax  ; save in unknownIndex2
+; til  here we got:
+;       bl = knownValue1
+;       bh = knownValue2
+; store unknown value up
+    interpolation_operation bl, bh
+    mov al, cl
+    push rbx
+    load_to_array ARRAY, unknownIndex1      ; store 'al' register into ARRAY[unknownIndex1]
+    pop rbx
+; store unknown value down
+    interpolation_operation bh, bl
+    mov al, cl
+    load_to_array ARRAY, unknownIndex2      ; store 'al' register into ARRAY[unknownIndex2]
+    ret
+
+
+
+; ________________________________________________________________________________________________________________
+; _write():
+; Write to output file
+_write:
+    mov r15, 1                  ; set counter to 1 - 0 is module of any number, to prevent new line we start in 1
+    mov rax, 0                  ; clear rax
+    mov rcx, 0                  ; clear rcx
+    mov rbx, 0                  ; clear rbx
+    mov rdx, 0                  ; clear rdx
+    mov r14, ARRAY              ; save pointer to initial value in array
+_writing:
+    movzx rax, byte[r14]           ; current value to analyze
+    push_reg
+; get ascii value
+    dec_to_ascii                    ; return array address in rax  -  p /u(char[5])strAsciiResult
+    call _writeASCII_3digits
+; writing new line
+    mov rcx, PIXELS                 ; save number of columns to know when to make new line.
+    mov rax, r15                    ; move counter value to rax
+    mov rdx, 0                      ; reset rdx to prevent error in division
+    div rcx                         ; EDX =   0 = 97 % 97  (remainder)
+    cmp dx, 0
+    jz _writing_newline
+; ; writing space
+    write msg_space, 1
+_continue_writing:
+    pop_reg
+    add r15d, 1
+    add r14, 1
+; stop condition
+    mov r13, ARRAY_LENGTH
+    add r13, 1
+    cmp r15, r13             
+    jne _writing                    ; If counter is equal to array length stop.
+
+    ret
+
+; ------
+; _writeASCIInum()
+; Write digit of ascii to txt
+_writeASCII_3digits:
+; array address in rax
+    mov sil, 3                      ; number of iterations 3
+    xor cl, cl                      ; set counter
+    mov rdx, buffer                 ; load buffer address
+_writing_ascii_3digits_loop:
+    mov bl, [rax+rcx]               ; load value in efective address
+    mov byte[rax+rcx], 0x30         ; load a 0 to value in efective address
+    mov [rdx], bl                   ; save value in buffer
+    push_reg
+    write buffer, 1                    ; write buffer
+    pop_reg
+    inc cl
+    cmp cl, sil
+    jne _writing_ascii_3digits_loop ; if counter is greater or equal to 3, get out
+    ret
+
+; ------
+; _writing_newline()
+; Write newline to txt
+_writing_newline:
+    push_reg
+    write msg_newline, 1
+    pop_reg
+    jmp _continue_writing
+
+
+
+
+; ________________________________________________________________________________________________________________
 ; _closeFiles()
 ; Close txt files
 _closeFiles:
@@ -289,7 +278,9 @@ _closeFiles:
     
     ret
 
-; -------------------------------------------------------------------------------
+
+
+; ________________________________________________________________________________________________________________
 ; _exit()
 ; exit system
 _exit:
@@ -300,26 +291,20 @@ _exit:
 
 
 
-
-; -------------------------------------------------------------------------------
-
-
+; ________________________________________________________________________________________________________________
+; CONSTANTS AND VARIABLES
 section .data
-    INDEX           dd 0
+    INDEX           dd 0        ; p/u(char)INDEX
 
 ; files
     file_in   db  '../../files/image.txt', 0      ; name of input image file
-    ; file_in     db  '../../fi/les/image97.txt', 0      ; name of input image file
+    ; file_in     db  '../../files/image97.txt', 0      ; name of input image file
     file_out    db  '../../files/image-i.txt', 0    ; name of output image file
 ; messages
-    ; msg1 db	'The current ARRAY is:',0xA,0xD
-    ; len1 equ $ - msg1
     msg_space db	'',32
     msg_newline db	'',0xA
-    MULTIPLIER  equ 100
 
-
-    ; in gdb    -   p /u(char[100])ARRAY    /    p/u(char)INDEX
+    ; in gdb    -   p /u(char[100])ARRAY
     ARRAY TIMES ARRAY_LENGTH db 0                            ; matrix memory allocation
 
 
@@ -332,7 +317,5 @@ section .bss
     byte_ctr    resd     1     ; current input sample
     ascii_value resd     3     ; stores the ascii output sample
 ; algorithm
-    knownIndex1      resd     4     ; knownIndex1 variable
-    knownIndex2      resd     4     ; knownIndex2 variable
     unknownIndex1    resd     4     ; unknownIndex1 variable
     unknownIndex2    resd     4     ; unknownIndex2 variable

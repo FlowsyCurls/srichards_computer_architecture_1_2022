@@ -5,11 +5,12 @@
 ; 10
 ARRAY_LENGTH equ 100
 PIXELS equ 10
-LASTCOLUMN equ PIXELS-1
 
 PIXELS_MUL_BY_2 equ 2*PIXELS
 PIXELS_MUL_BY_3 equ 3*PIXELS
 ARRAY_LENGTH_MINUS_3PIXELS equ ARRAY_LENGTH - PIXELS_MUL_BY_3 
+MULTIPLIER  equ 100
+
 
 
 space       equ 32
@@ -196,58 +197,26 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 
 
 ; -------------------------------------------------------------------------------
-%macro vertical_interpolation 4
+%macro interpolation_operation 2
 ; > Input
-;   edx current index address
-;   r10 current index num
-;   %1 = pointer to knownIndex1
-;   %2 = pointer to knownIndex2
-;   %3 = pointer to unknownIndex1
-;   %4 = pointer to unknownIndex2
-
-; > Output
-;   al = unknownUp - value
-;   bl = unknownDown - value
-;   cl = unknownIndex1
-;   dl = unknownIndex2
-
-
-
-; knownIndex1 = i
-    mov eax, r10d                ; load current index
-%%k1:
-    mov   ecx, PIXELS 
-%%k2:
-; knownIndex2 = i + 3*PIXELS
-    mov   eax, 3                ; move a 3 into eax
-    mul   ecx                   ; 3 * PIXELS
-    add   eax, r10d             ; i + 3*PIXELS
-    lea   rax, [rdx+rax]        ; effective address  =>  array[i + 3pixels]
-    mov   [%3], eax             ; change unknownIndex2 value
-
-; %%k3:
-; ; unknownIndex1 = i + PIXELS
-;     mov   eax, ecx              ; move PIXELS to eax
-;     add   eax, edx              ; i + PIXELS
-;     mov   [%4], eax             ; change unknownIndex1 value
-; ; %%k4:
-; ; unknownIndex2 = i + 2*PIXELS
-;     mov   eax, 2                ; move a 2 into eax
-;     mul   ecx                   ; 2 * PIXELS
-;     add   eax, edx              ; i + 2*PIXELS
-;     mov   [%5], eax             ; change unknownIndex2 value
-
-%%sop:
-    ; push  eax
-    
-
-
-
-
-
-
-    ; mov   ebx, 1
-    ; mov   ecx, %1   ; msg
-    ; mov   edx, %2   ; text len
-    ; int   80h
+; %1 : value x
+; %2 : value y
+; > OUTPUT
+;    cl = unknownValue
+; cl = (2 * x) // 3
+    xor  rax, rax           ; clear rax
+    xor  rcx, rcx           ; clear rcx
+    mov  al, %1             ; move bl in al (as numbers are just 1 byte) [zero extend]
+    mov  dl, 2              ; move a 2 in dl (multiplier)
+    mul  dl                 ; AX (product) => (2 * x)
+    mov  dl, 3              ; move a 3 in dl (divisor)
+    div  dl                 ; AL (quotient) => (2 * y) // 3
+    mov cl, al              ; move al to r8b. (8bits) 0-255
+; cl += (1 * y) // 3
+    xor  rax, rax           ; clear rax
+    mov  al, %2             ; move bh in al
+    mov  dl, 3              ; move a 3 in dl (divisor)
+    div  dl                 ; AL (quotient) => knownValue2 // 3
+    add  cl, al             ; add to r8b the value in al (8bits)
+    xor  rax, rax           ; clear rax
 %endmacro
