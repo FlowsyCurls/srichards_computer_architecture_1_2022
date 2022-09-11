@@ -147,7 +147,6 @@ _vertical_loop_i:
     jge _continue_vertical_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
     push r14
 ; call arithmethic procedure
-    clear_reg
     call _vertical_arithmetic
     pop r14
 ; increase references
@@ -198,7 +197,7 @@ _vertical_arithmetic:
 _horizontal_pixels:
 ;; calculate horizontal pixeles
     clear_reg
-    mov r15, 0                  ; j -  while (j < (len(bucket)-3)):
+    mov r15, 0                      ; j -  while (j < (len(bucket)-3)):
     mov r14, 0
     jmp _horizontal_loop_j
 _horizontal_pixels_end:
@@ -211,16 +210,10 @@ _horizontal_pixels_end:
 _horizontal_loop_j:
 ; stop condition
     cmp r15, ARRAY_LENGTH-3
-    jge _horizontal_pixels_end    ; for j in range(0, (len(bucket)-3), 3)
+    jge _horizontal_pixels_end      ; for j in range(0, (len(bucket)-3), 3)
     push r15
-
-; -------------------------------------------------------------------
-; call horizontal loop with r procedure
-    ; mov r14, 0                  ; r - for r in range(0, j+r*PIXELS < (len(ARRAY)))
-    ; jmp _horizontal_loop_i
-; -------------------------------------------------------------------
-
-_continue_horizontal_loop_j:
+; call arithmethic procedure
+    call _horizontal_arithmetic
     pop r15
 ; increase references
     add r15, 3                      ; j += 3
@@ -228,37 +221,57 @@ _continue_horizontal_loop_j:
     test r15, r15                   ; r15 is 0?
     jz _horizontal_loop_j
 ; analized mod PIXELS
-    xor dx, dx
-    mov ax, r15w
+    xor rdx, rdx
+    mov rax, r15
     add ax, 1
-    mov bx, PIXELS
+    mov rbx, PIXELS
     div bx
     ; DX is 0? (remainder) If j % PIXEL, then j+=1
     test dx, dx                    
     jnz _horizontal_loop_j          ; no, continue
     add  r15, 1                     ; j++
-    
+
     jmp _horizontal_loop_j
 
 
 ; ------
-; _horizontal_loop_i():
-; Intermediate loop for rows.
-_horizontal_loop_i:
-; stop condition
-    cmp r14, ARRAY_LENGTH_MINUS_3PIXELS             
-    jge _continue_horizontal_loop_j        ; If counter is greather or equal array len(array)-3*PIXELS, then stop
-    push r14
-; call arithmethic procedure
+; _horizontal_arithmetic():
+; This function determines the corresponding index and performs the algebraic calculation, 
+; then stores it where it should be.
+_horizontal_arithmetic:
     clear_reg
-    ; call _horizontal_arithmetic
-    pop r14
-; increase references
-    add r14, PIXELS_MUL_BY_3    ; add 3*PIXELS to counter
-    jmp _horizontal_loop_i
+; knownIndex1
+    mov bl, byte[ARRAY+r15]     ; load value at relative address to bl (low-order 8 bits)
+; knownIndex2
+    mov rax, r15                ; copy i value to rax
+    add rax, 3                  ; i + 3
+    mov bh, byte[ARRAY+rax]     ; load value at relative address to bh (high-order 8 bits)
+; unknownIndex1   -  p /u(char)unknownIndex1
+    mov rax, r15                ; copy i value to rax
+    add rax, 1                  ; i + 1
+    mov [unknownIndex1], rax    ; save in unknownIndex1
+; unknownIndex2   -  p /u(char)unknownIndex2
+    mov rax, r15                ; copy i value to rax
+    add rax, 2                  ; i + 2
+    mov [unknownIndex2], rax  ; save in unknownIndex2
+; til  here we got:
+;       bl = knownValue1
+;       bh = knownValue2
+; store unknown value up
+    interpolation_operation bl, bh
+    mov al, cl
+    push rbx
+    load_to_array ARRAY, unknownIndex1      ; store 'al' register into ARRAY[unknownIndex1]
+    pop rbx
+; store unknown value down
+    interpolation_operation bh, bl
+    mov al, cl
+    load_to_array ARRAY, unknownIndex2      ; store 'al' register into ARRAY[unknownIndex2]
+    
+    ret
+
 
     
-
 ; ________________________________________________________________________________________________________________
 ; _write():
 ; Write to output file
@@ -363,8 +376,8 @@ section .data
     INDEX           dd 0        ; p/u(char)INDEX
 
 ; files
-    file_in   db  '../../files/image.txt', 0      ; name of input image file
-    ; file_in     db  '../../files/image97.txt', 0      ; name of input image file
+    ; file_in   db  '../../files/image.txt', 0      ; name of input image file
+    file_in     db  '../../files/image97.txt', 0      ; name of input image file
     file_out    db  '../../files/image-i.txt', 0    ; name of output image file
 ; messages
     msg_space db	'',32

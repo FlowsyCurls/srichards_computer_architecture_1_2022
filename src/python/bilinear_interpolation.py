@@ -1,3 +1,4 @@
+from re import I
 import numpy as np
 import os
 
@@ -73,9 +74,9 @@ def bilinear_interpolation(arr, n):
     print("Bucket spaces:\t", len(bucket))
 
     # First place values
-    pprint_vector("\narray: ", arr)
+    # pprint_vector("\narray: ", arr)
     bucket = place_values(arr, bucket, k)
-    pprint_matrix("\nUnfilled bucket: ", np.reshape(bucket, (10, 10)))
+    # pprint_matrix("\nUnfilled bucket: ", np.reshape(bucket, (10, 10)))
 
     # Now algorithm
     vertical_interpolation(bucket, k)
@@ -89,53 +90,43 @@ def vertical_interpolation(bucket, PIXELS):
     # knownIndex2 = currentIndex + 3*PIXELS
 
     # print(knUP, knDN, ukUP, ukDN)
-    i, j = 0, 0
-    while (j < PIXELS):
-        i = 0
-        while (i < len(bucket)-3*PIXELS):
+
+    for j in range(0, 10, 3):
+        for i in range(0, len(bucket)-30, 30):
             i += j
-            # print("i:", i)
             unknownIndex1 = i + PIXELS
             unknownIndex2 = i + 2*PIXELS
             knownIndex1 = i
             knownIndex2 = i + 3*PIXELS
-            # print(knownIndex1, knownIndex2, unknownIndex1, unknownIndex2)
+
             knUP = bucket[knownIndex1]
             knDN = bucket[knownIndex2]
             ukUP = round((2/3)*knUP + (1/3)*knDN)
-            ukDN = round((2/3)*knDN + (1/3)*knUP)
-            # print(knUP, knDN, ukUP, ukDN)
+            ukDN = round((1/3)*knUP + (2/3)*knDN)
+            print(knUP, knDN, ukUP, ukDN)
             bucket[unknownIndex1] = ukUP
             bucket[unknownIndex2] = ukDN
-            i += 3*PIXELS
-        j += 3
 
-    # pprint_matrix("\nFilled bucket: ", np.reshape(bucket, (10, 10)))
+    # pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
 
 
 def horizontal_interpolation(bucket, PIXELS):
-
     i = 0
     j = 0
-    # for i in range(0, len(bucket)-3, 3):
     while (j < (len(bucket)-3)):
-        # print("j:", j)
-        # print("\ni:  ", i, "  PIXELS ", PIXELS)
-        for i in range(0, j+i*PIXELS < (len(bucket))):
-            knownIndex1 = j + i*PIXELS
-            knownIndex2 = knownIndex1 + 3
-            unknownIndex1 = knownIndex1 + 1
-            unknownIndex2 = knownIndex1 + 2
-            ukLF = round((2*bucket[knownIndex1])//3 + (bucket[knownIndex2]//3))
-            ukRG = round((2*bucket[knownIndex2])//3 + (bucket[knownIndex1]//3))
-            bucket[unknownIndex1] = ukLF
-            bucket[unknownIndex2] = ukRG
+
+        knownIndex1 = j + i*PIXELS
+        knownIndex2 = knownIndex1 + 3
+        unknownIndex1 = knownIndex1 + 1
+        unknownIndex2 = knownIndex1 + 2
+        ukLF = round((2/3)*bucket[knownIndex1] + (1/3)*bucket[knownIndex2])
+        ukRG = round((1/3)*bucket[knownIndex1] + (2/3)*bucket[knownIndex2])
+        bucket[unknownIndex1] = ukLF
+        bucket[unknownIndex2] = ukRG
 
         j += 3
         if ((j != 0) and ((j+1) % PIXELS == 0)):
-            print("\nchanged:  ", j)
             j += 1
-            print("to:  ", j)
 
     pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
 
@@ -145,9 +136,9 @@ def place_values(arr, bucket, k, base=1, n=0, i=0):
         return bucket
 
     limit = base*k
-    print("\nn: ", n, "➜", limit,
-          "\t k: ", k,
-          "\t i: ", i)
+    # print("\nn: ", n, "➜", limit,
+    #       "\t k: ", k,
+    #       "\t i: ", i)
 
     while n < limit:
         if (n % 3 == 0):
