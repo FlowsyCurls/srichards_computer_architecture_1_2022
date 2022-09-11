@@ -26,6 +26,11 @@ def algorithm(matrix, n):
     return image
 # Parse a np matrix to a list
 
+def algorithm_revision():
+    execute()
+    lst = read_file(outfilename)
+    image = np.reshape(lst, (10, 10))
+    return image
 
 def print_matrix(matrix):
     lst = []
