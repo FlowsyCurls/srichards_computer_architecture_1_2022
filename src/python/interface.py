@@ -133,7 +133,8 @@ class Interface:
         self.path = filedialog.askopenfilename(
             initialdir=os.path.join(os.getcwd(), 'imgs'),
             title="Select file",
-            filetypes=(("jpeg files", "*.jpg"), ("all files", "*.*")))
+            filetypes=(("", "*.jpg"), ("","*.png"),("all files", "*.*")))
+        if (self.path is None): return
         self.pic = self.rgb2gray(cv2.imread(self.path))
         self.create_tiles()
         self.square.set_xy((self.square_offset, self.square_offset))
