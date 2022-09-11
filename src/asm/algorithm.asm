@@ -44,6 +44,8 @@ _openFiles:
 
     ; store output file descriptor
     mov [fd_out], rax   ; store output file descriptor
+    
+    xor r9, 0  ; This will be the counter.
 
     ret
 
@@ -72,17 +74,19 @@ _read:
     jne   _read                 ; break if analyzed byte is 'F' (end of file)
     load_to_array ARRAY, INDEX  ; load value
     xor r10, r10                ; clear r10
+    xor r15, r15                ; clear r15
+    mov [INDEX], r15            ; reset index value
     ret
+
 
 
 ; ------
 ; _loadSpace():
 ; Load al into ARRAY[INDEX], also index increase by 3.
 _loadSpace:
+    mov [INDEX], r15            ; store index new value
     load_to_array ARRAY, INDEX  ; load value
-    ; bx is pointing to the index from the prev function
-    add     bx, 0x3               ; increment the index by 3.
-    mov     [INDEX], bx           ; load new value to index
+    add r15, 0x3                  ; increase the INDEX by 3.
 
     jmp     _read
 
@@ -92,9 +96,9 @@ _loadSpace:
 ; Load al into ARRAY[INDEX], also index increase by 2*PIXELS+1.
 _loadNewLine:
     load_to_array ARRAY, INDEX  ; load value
-    ; bx is pointing to the index from the prev function
-    add     bx, PIXELS_MUL_BY_2+1               ; increment the INDEX by 2*PIXELS.
-    mov     [INDEX], bx
+    add r15, 0x1                ; i + 1
+    add r15, PIXELS_MUL_BY_2    ; i + 2*PIXELS
+
     jmp     _read
 
 
@@ -114,6 +118,7 @@ _vertical_pixels:
 ;; calculate vertical pixeles
     clear_reg
     xor r15, 0                  ; j - for j in range(0, PIXELS, 3):
+    mov [INDEX], r15            ; store index new value
     jmp _vertical_loop_j
 _vertical_pixels_end:
     ret
@@ -373,10 +378,13 @@ _exit:
 ; ________________________________________________________________________________________________________________
 ; CONSTANTS AND VARIABLES
 section .data
-    INDEX           dd 0        ; p/u(char)INDEX
 
 ; files
     file_in   db  '../../files/image.txt', 0      ; name of input image file
+    ; file_in   db  '../../files/image4x4.txt', 0      ; name of input image file
+    ; file_in   db  '../../files/image86x86.txt', 0      ; name of input image file
+    ; file_in   db  '../../files/image97x97.txt', 0      ; name of input image file
+
     file_out    db  '../../files/image-i.txt', 0    ; name of output image file
 ; messages
     msg_space db	'',32
@@ -397,3 +405,4 @@ section .bss
 ; algorithm
     unknownIndex1    resd     4     ; unknownIndex1 variable
     unknownIndex2    resd     4     ; unknownIndex2 variable
+    INDEX            resd     4     ; index for array       p /u(int)INDEX

@@ -1,11 +1,14 @@
-; 97
-; ARRAY_LENGTH equ 83521
-; PIXELS equ 289
 
-; 10
-ARRAY_LENGTH equ 100
-PIXELS equ 10
+N equ 97
+; N equ 86
+; N equ 4
 
+
+
+
+# CONSTANTS
+PIXELS equ 3*N-2
+ARRAY_LENGTH equ PIXELS*PIXELS
 PIXELS_MUL_BY_2 equ 2*PIXELS
 PIXELS_MUL_BY_3 equ 3*PIXELS
 ARRAY_LENGTH_MINUS_3PIXELS equ ARRAY_LENGTH - PIXELS_MUL_BY_3 
@@ -163,11 +166,22 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 %macro load_to_array 2
 ; %1 : pointer to array
 ; %2 : pointer to index
-    mov  ebx,[%2]          ; bx will point to the current index in ARRAY [zero extended] 
-    mov  [%1+rbx], al     ; give the rbx-th array element the value al
+    mov  rbx,[%2]          ; bx will point to the current index in ARRAY [zero extended] 
+    mov  [%1+rbx], al      ; give the rbx-th array element the value al
     ; inc     word[%2]         ; increment the index by 4.
 %endmacro
 
+
+
+; ; -------------------------------------------------------------------------------
+; ; load_to_array_curr():
+; ; Load 'al' register into ARRAY[index]
+; %macro load_to_array_curr 1
+; ; %1 : pointer to array
+;     mov r9,0xFFFF
+;     mov  [%1+r9], al          ; give the rbx-th array element the value al
+;     ; inc     word[%2]         ; increment the index by 4.
+; %endmacro
 
 
 ; -------------------------------------------------------------------------------

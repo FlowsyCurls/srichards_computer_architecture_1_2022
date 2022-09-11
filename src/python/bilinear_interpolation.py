@@ -1,7 +1,8 @@
-from re import I
 import numpy as np
 import os
-import time
+import cv2 
+import matplotlib.pyplot as plt
+import matplotlib.image as mpimg
 
 asm_filename = "algorithm"
 filename = "image.txt"
@@ -31,6 +32,30 @@ def algorithm_revision():
     lst = read_file(outfilename)
     image = np.reshape(lst, (10, 10))
     return image
+
+def test_other_resolution(name, n):
+    s = 3*n-2
+    path = os.path.join(os.getcwd(), 'imgs', name)
+    arr = cv2.imread(path) # read image
+    arr = np.dot(arr[..., : 3], [1, 0, 0]) # normalize dimensions
+    write_file(arr)
+    ''' remember to change the variables in algorithm.asm '''
+    execute()
+    img1 = np.reshape(arr, (n, n))
+    img2 = np.reshape(read_file(outfilename), (s, s))
+    showImages(img1, img2)
+
+def showImages(img1, img2):    
+    f, axarr = plt.subplots(1,2,figsize=(14, 6))
+    f.suptitle('Bilinear Interpolation', fontweight="bold")
+    ax1 = axarr[0]
+    ax2 = axarr[1]
+    ax1.set(title="original")
+    ax1.imshow(img1, cmap=plt.get_cmap('gray'))
+    ax2.set(title="interpolated")
+    ax2.imshow(img2, cmap=plt.get_cmap('gray'))
+    plt.show()
+
 
 def print_matrix(matrix):
     lst = []
@@ -167,3 +192,8 @@ def place_values(arr, bucket, k, base=1, n=0, i=0):
         n += 1
     n += 20
     return place_values(arr, bucket, k, base+3, n, i)
+
+
+# name = 'news.jpg'
+# resol = 97
+# test_other_resolution(name,resol)
