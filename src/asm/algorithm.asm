@@ -376,8 +376,7 @@ section .data
     INDEX           dd 0        ; p/u(char)INDEX
 
 ; files
-    ; file_in   db  '../../files/image.txt', 0      ; name of input image file
-    file_in     db  '../../files/image97.txt', 0      ; name of input image file
+    file_in   db  '../../files/image.txt', 0      ; name of input image file
     file_out    db  '../../files/image-i.txt', 0    ; name of output image file
 ; messages
     msg_space db	'',32

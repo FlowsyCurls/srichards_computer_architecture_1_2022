@@ -1,15 +1,29 @@
 from re import I
 import numpy as np
 import os
+import time
 
+asm_filename = "algorithm"
 filename = "image.txt"
+outfilename = "image-i.txt"
 filename = os.path.join(os.getcwd(), 'files', filename)
+outfilename = os.path.join(os.getcwd(), 'files', outfilename)
 
 
-def algorithm(matrix):
-    print_matrix(matrix)
+def execute():
+    path = "cd $HOME/Documents/Project1/src/asm"
+    cmd = 'nasm -felf64 -o {0}.o {0}.asm && ld -o {0} {0}.o && ./{0}'.format(
+        asm_filename)
+    os.system(path + "&&" + cmd)
+
+
+def algorithm(matrix, n):
+    size = (3*n)-2
     write_file(matrix)
-
+    execute()
+    lst = read_file(outfilename)
+    image = np.reshape(lst, (size, size))
+    return image
 # Parse a np matrix to a list
 
 
@@ -39,13 +53,13 @@ def write_file_aux(row):
             s += '0' + n + " "
         else:
             s += '0' + n + "0 "
-    print(s)
+    # print(s)
     return s[:-1]  # Remove last space
 
 # For reading image file and test.
 
 
-def read_file():
+def read_file(filename):
     f = open(filename, "r")
     tmp = f.read()
     tmp = tmp[:-2].split('\n')
@@ -53,7 +67,7 @@ def read_file():
     for n in tmp:
         arr += (n.split(' '))
     # print(arr)
-    return arr
+    return [int(i) for i in arr]
 
 
 def pprint_matrix(label, arr):
@@ -128,7 +142,7 @@ def horizontal_interpolation(bucket, PIXELS):
         if ((j != 0) and ((j+1) % PIXELS == 0)):
             j += 1
 
-    pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
+    # pprint_matrix("\nbucket: ", np.reshape(bucket, (10, 10)))
 
 
 def place_values(arr, bucket, k, base=1, n=0, i=0):
@@ -148,41 +162,3 @@ def place_values(arr, bucket, k, base=1, n=0, i=0):
         n += 1
     n += 20
     return place_values(arr, bucket, k, base+3, n, i)
-
-
-def bilinear_interpolate_aux(A, B, C, D):
-    # Conocidos
-    a = round((2/3)*A + (1/3)*B)
-    b = round((1/3)*A + (2/3)*B)
-    c = round((2/3)*A + (1/3)*C)
-    g = round((1/3)*A + (2/3)*C)
-    k = round((2/3)*C + (1/3)*D)
-    l = round((1/3)*C + (2/3)*D)
-    f = round((2/3)*B + (1/3)*D)
-    j = round((1/3)*B + (2/3)*D)
-    # Intermedios
-    d = round((2/3)*c + (1/3)*f)
-    e = round((1/3)*c + (2/3)*f)
-    h = round((2/3)*g + (1/3)*j)
-    i = round((1/3)*g + (2/3)*j)
-    return [[A, a, b, B], [c, d, e, f], [g, h, i, j], [C, k, l, D]]
-
-# v = bilinear_interpolate(10,20,30,40)
-
-
-# print(np.matrix(I2))
-
-
-# print(im[0][:16])
-# print(im[1][:16])
-# print(im[2][:16])
-# print(im[3][:16])
-# print(im[4][:16])
-# print(im[5][:16])
-
-arr = read_file()
-bilinear_interpolation(arr, 4)
-
-# x, y = 10, 20
-
-# print(2*)

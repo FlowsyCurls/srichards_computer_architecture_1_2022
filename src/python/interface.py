@@ -2,6 +2,7 @@ from turtle import bgcolor
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Button as Button
+from matplotlib import text
 import os
 import cv2
 import numpy as np
@@ -13,7 +14,7 @@ class Interface:
 
     # Class Variable
     rows = 1
-    columns = 2
+    columns = 3
     bg_color = 'whitesmoke'
     lines_color = 'black'
     sq_color = 'red'
@@ -46,7 +47,7 @@ class Interface:
     def create_figure(self):
         # create figure
         self.fig, axs = plt.subplots(
-            nrows=self.rows, ncols=self.columns, figsize=(9, 5))
+            nrows=self.rows, ncols=self.columns, figsize=(14, 6))
         self.fig.patch.set_facecolor('snow')
         self.fig.canvas.set_window_title(
             'Project 1 - Arquitectura de Computadores 1')
@@ -56,6 +57,7 @@ class Interface:
         plt.subplots_adjust(top=0.85, bottom=0.2)
         self.ax1 = axs[0]
         self.ax2 = axs[1]
+        self.ax3 = axs[2]
 
         # SUBPLOTS CONFIGUTATION
         # original image, settings
@@ -68,10 +70,14 @@ class Interface:
         self.ax1.grid(alpha=1, color=self.lines_color)
         plt.setp(self.ax1.spines.values(), linewidth=2, color=self.lines_color)
 
-        # interpolated image, settings
-        self.ax2.set(title="interpolated")
+        # crop image, settings
+        self.ax2.set(title="cropped")
         self.ax2.patch.set_facecolor(self.bg_color)
-        plt.axis('off')
+        self.ax2.set_axis_off()
+        # interpolated image, settings
+        self.ax3.set(title="interpolated")
+        self.ax3.patch.set_facecolor(self.bg_color)
+        self.ax3.set_axis_off()
 
         # square
         x = y = 20
@@ -144,18 +150,15 @@ class Interface:
 
         box = self.tiles[self.index]
         crop_image = self.pic[box[1]:box[3], box[0]:box[2]]
-        
+
         if (crop_image is None):
             return
-        
+
         # Write to txt.
-        array_list = crop_image.tolist()
-        algorithm(crop_image.tolist()) 
-        
-        print("Dimensions:", crop_image.shape)
-        InterpolatedImage = crop_image
-        self.ax2.imshow(InterpolatedImage, cmap=plt.get_cmap('gray'))
-        # print("Coordinates: x({0},{1})  y({2},{3})".format(box[1], box[3],box[0],box[2]))
+        InterpolatedImage = algorithm(crop_image.tolist(), crop_image.shape[0])
+        print("Output dimensions:", InterpolatedImage.shape)
+        self.ax2.imshow(crop_image, cmap=plt.get_cmap('gray'))
+        self.ax3.imshow(InterpolatedImage, cmap=plt.get_cmap('gray'))
 
     # RGB TO GRAY - 3dim to 2dim
 

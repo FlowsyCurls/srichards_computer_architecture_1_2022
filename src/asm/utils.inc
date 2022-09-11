@@ -1,4 +1,4 @@
-; ; 97
+; 97
 ARRAY_LENGTH equ 83521
 PIXELS equ 289
 
