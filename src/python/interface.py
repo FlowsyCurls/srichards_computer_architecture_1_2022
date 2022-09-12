@@ -159,9 +159,9 @@ class Interface:
             return
 
         # Write to txt.
-        # InterpolatedImage = algorithm(crop_image.tolist(), crop_image.shape[0])
+        InterpolatedImage = algorithm(crop_image.tolist(), crop_image.shape[0])
 
-        crop_image, InterpolatedImage = algorithm_revision(4);
+        # crop_image, InterpolatedImage = algorithm_revision(4);
 
         print("Output dimensions:", InterpolatedImage.shape)
         self.ax2.imshow(crop_image, cmap=plt.get_cmap('gray'))
