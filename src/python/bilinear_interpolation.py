@@ -2,11 +2,11 @@ import numpy as np
 import os
 import cv2 
 import matplotlib.pyplot as plt
-import matplotlib.image as mpimg
 
 asm_filename = "algorithm"
 filename = "image.txt"
 outfilename = "image-i.txt"
+testfile = os.path.join(os.getcwd(), 'files', 'image4x4.txt')
 filename = os.path.join(os.getcwd(), 'files', filename)
 outfilename = os.path.join(os.getcwd(), 'files', outfilename)
 
@@ -30,9 +30,12 @@ def algorithm(matrix, n):
 def algorithm_revision(n):
     s = 3*n-2
     execute()
+    lst = read_file(testfile)
+    image1 = np.reshape(lst, (n, n))
     lst = read_file(outfilename)
-    image = np.reshape(lst, (s, s))
-    return image
+    image2 = np.reshape(lst, (s, s))
+
+    return [image1, image2]
 
 def test_other_resolution(name, n):
     s = 3*n-2
@@ -198,3 +201,9 @@ def place_values(arr, bucket, k, base=1, n=0, i=0):
 # name = 'elmo86x86.jpg'
 # resol = 86
 # test_other_resolution(name,resol)
+
+arr = []
+lst = read_file(outfilename)
+for i in range(0,len(lst)):
+    if (int(lst[i]) == 0 ):
+        arr.append(i)

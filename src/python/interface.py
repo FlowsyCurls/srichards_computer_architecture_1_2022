@@ -1,8 +1,6 @@
-from turtle import bgcolor
 import matplotlib.pyplot as plt
 import matplotlib.patches as patches
 from matplotlib.widgets import Button as Button
-from matplotlib import text
 import os
 import cv2
 import numpy as np
@@ -136,11 +134,15 @@ class Interface:
             filetypes=(("", "*.jpg"), ("", "*.png"), ("all files", "*.*")))
         if (self.path is None):
             return
+        
         self.pic = self.rgb2gray(cv2.imread(self.path))
         self.create_tiles()
         self.square.set_xy((self.square_offset, self.square_offset))
         self.index = 0
+        
         self.ax1.imshow(self.pic, cmap=plt.get_cmap('gray'))
+        self.fig.canvas.draw_idle()
+
         if (not self.visible):
             self.toggle_visibility()
         # print ("\nUploaded:",self.path)
@@ -157,9 +159,9 @@ class Interface:
             return
 
         # Write to txt.
-        InterpolatedImage = algorithm(crop_image.tolist(), crop_image.shape[0])
+        # InterpolatedImage = algorithm(crop_image.tolist(), crop_image.shape[0])
 
-        # InterpolatedImage = algorithm_revision(8);
+        crop_image, InterpolatedImage = algorithm_revision(4);
 
         print("Output dimensions:", InterpolatedImage.shape)
         self.ax2.imshow(crop_image, cmap=plt.get_cmap('gray'))
