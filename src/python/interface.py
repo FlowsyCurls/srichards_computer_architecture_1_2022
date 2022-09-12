@@ -47,7 +47,7 @@ class Interface:
     def create_figure(self):
         # create figure
         self.fig, axs = plt.subplots(
-            nrows=self.rows, ncols=self.columns, figsize=(14, 6))
+            nrows=self.rows, ncols=self.columns, figsize=(18, 7))
         self.fig.patch.set_facecolor('snow')
         self.fig.canvas.set_window_title(
             'Project 1 - Arquitectura de Computadores 1')
@@ -133,8 +133,9 @@ class Interface:
         self.path = filedialog.askopenfilename(
             initialdir=os.path.join(os.getcwd(), 'imgs'),
             title="Select file",
-            filetypes=(("", "*.jpg"), ("","*.png"),("all files", "*.*")))
-        if (self.path is None): return
+            filetypes=(("", "*.jpg"), ("", "*.png"), ("all files", "*.*")))
+        if (self.path is None):
+            return
         self.pic = self.rgb2gray(cv2.imread(self.path))
         self.create_tiles()
         self.square.set_xy((self.square_offset, self.square_offset))
@@ -157,9 +158,9 @@ class Interface:
 
         # Write to txt.
         InterpolatedImage = algorithm(crop_image.tolist(), crop_image.shape[0])
-        
-        # InterpolatedImage = algorithm_revision();
-        
+
+        # InterpolatedImage = algorithm_revision(8);
+
         print("Output dimensions:", InterpolatedImage.shape)
         self.ax2.imshow(crop_image, cmap=plt.get_cmap('gray'))
         self.ax3.imshow(InterpolatedImage, cmap=plt.get_cmap('gray'))

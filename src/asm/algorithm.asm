@@ -2,11 +2,8 @@
 ; gdb algorithm-v2
 ;   p /u(char[100])ARRAY
 
-
 %include "linux64.inc"
 %include "utils.inc"
-
-
 
 section .text
         global _start
@@ -72,10 +69,13 @@ _read:
 ;loop
     cmp  r10, F                 ; compare number in rax to (F ~70) to determine end of file in buffer
     jne   _read                 ; break if analyzed byte is 'F' (end of file)
+
+    mov [INDEX], r15            ; reset index value
     load_to_array ARRAY, INDEX  ; load value
     xor r10, r10                ; clear r10
     xor r15, r15                ; clear r15
     mov [INDEX], r15            ; reset index value
+t:
     ret
 
 
@@ -95,6 +95,7 @@ _loadSpace:
 ; _loadNewLine():
 ; Load al into ARRAY[INDEX], also index increase by 2*PIXELS+1.
 _loadNewLine:
+    mov [INDEX], r15            ; store index new value
     load_to_array ARRAY, INDEX  ; load value
     add r15, 0x1                ; i + 1
     add r15, PIXELS_MUL_BY_2    ; i + 2*PIXELS
@@ -372,37 +373,3 @@ _exit:
     mov rax, 1          ; ID for sys_close
     mov rbx, 0
     int 0x80
-
-
-
-; ________________________________________________________________________________________________________________
-; CONSTANTS AND VARIABLES
-section .data
-
-; files
-    file_in   db  '../../files/image.txt', 0      ; name of input image file
-    ; file_in   db  '../../files/image4x4.txt', 0      ; name of input image file
-    ; file_in   db  '../../files/image86x86.txt', 0      ; name of input image file
-    ; file_in   db  '../../files/image97x97.txt', 0      ; name of input image file
-
-    file_out    db  '../../files/image-i.txt', 0    ; name of output image file
-; messages
-    msg_space db	'',32
-    msg_newline db	'',0xA
-
-    ; in gdb    -   p /u(char[100])ARRAY
-    ARRAY TIMES ARRAY_LENGTH db 0                            ; matrix memory allocation
-
-
-section .bss
-; file management
-    fd_in       resb    4      ; in file descriptor
-    fd_out      resb    4      ; out file descriptor
-; sample information
-    buffer      resd     1     ; buffer length
-    byte_ctr    resd     1     ; current input sample
-    ascii_value resd     3     ; stores the ascii output sample
-; algorithm
-    unknownIndex1    resd     4     ; unknownIndex1 variable
-    unknownIndex2    resd     4     ; unknownIndex2 variable
-    INDEX            resd     4     ; index for array       p /u(int)INDEX

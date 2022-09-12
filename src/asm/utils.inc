@@ -1,36 +1,5 @@
+%include "data.inc"
 
-N equ 97
-; N equ 86
-; N equ 4
-
-
-
-
-# CONSTANTS
-PIXELS equ 3*N-2
-ARRAY_LENGTH equ PIXELS*PIXELS
-PIXELS_MUL_BY_2 equ 2*PIXELS
-PIXELS_MUL_BY_3 equ 3*PIXELS
-ARRAY_LENGTH_MINUS_3PIXELS equ ARRAY_LENGTH - PIXELS_MUL_BY_3 
-MULTIPLIER  equ 100
-
-
-
-space       equ 32
-newline     equ 10
-tab         equ 09
-F           equ 70
-
-section	.data
-
-    i           dw 0
-    value       db 4; string buffer to store results
-    strAsciiResult TIMES 3 db 0x30
-
-
-section .bss
-
-    
 ; -------------------------------------------------------------------------------
 ; push_reg()
 ; Function that pushes all registers to stack

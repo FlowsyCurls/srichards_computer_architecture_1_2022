@@ -27,10 +27,11 @@ def algorithm(matrix, n):
     return image
 # Parse a np matrix to a list
 
-def algorithm_revision():
+def algorithm_revision(n):
+    s = 3*n-2
     execute()
     lst = read_file(outfilename)
-    image = np.reshape(lst, (10, 10))
+    image = np.reshape(lst, (s, s))
     return image
 
 def test_other_resolution(name, n):
@@ -194,6 +195,6 @@ def place_values(arr, bucket, k, base=1, n=0, i=0):
     return place_values(arr, bucket, k, base+3, n, i)
 
 
-# name = 'news.jpg'
-# resol = 97
+# name = 'elmo86x86.jpg'
+# resol = 86
 # test_other_resolution(name,resol)
