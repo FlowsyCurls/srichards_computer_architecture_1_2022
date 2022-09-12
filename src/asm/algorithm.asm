@@ -2,7 +2,6 @@
 ; gdb algorithm-v2
 ;   p /u(char[100])ARRAY
 
-%include "linux64.inc"
 %include "utils.inc"
 
 section .text
@@ -183,13 +182,13 @@ _vertical_arithmetic:
 ; til  here we got:
 ;       bl = knownValue1
 ;       bh = knownValue2
-; store unknown value up
+;store unknown value up
     interpolation_operation bl, bh
     mov al, cl
     push rbx
     load_to_array ARRAY, unknownIndex1      ; store 'al' register into ARRAY[unknownIndex1]
     pop rbx
-; store unknown value down
+;store unknown value down
     interpolation_operation bh, bl
     mov al, cl
     load_to_array ARRAY, unknownIndex2      ; store 'al' register into ARRAY[unknownIndex2]
@@ -218,6 +217,7 @@ _horizontal_loop_j:
     cmp r15, ARRAY_LENGTH-3
     jge _horizontal_pixels_end      ; for j in range(0, (len(bucket)-3), 3)
     push r15
+
 ; call arithmethic procedure
     call _horizontal_arithmetic
     pop r15
@@ -230,10 +230,10 @@ _horizontal_loop_j:
     xor rdx, rdx
     mov rax, r15
     add ax, 1
-    mov rbx, PIXELS
-    div bx
-    ; DX is 0? (remainder) If j % PIXEL, then j+=1
-    test dx, dx                    
+    mov ebx, PIXELS
+    div ebx
+    ; EDX is 0? (remainder) If j % PIXEL, then j+=1
+    test edx, edx                    
     jnz _horizontal_loop_j          ; no, continue
     add  r15, 1                     ; j++
 
@@ -268,6 +268,7 @@ _horizontal_arithmetic:
     mov al, cl
     push rbx
     load_to_array ARRAY, unknownIndex1      ; store 'al' register into ARRAY[unknownIndex1]
+    ; mov r15, [unknownIndex1]
     pop rbx
 ; store unknown value down
     interpolation_operation bh, bl

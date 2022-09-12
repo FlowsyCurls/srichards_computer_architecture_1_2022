@@ -142,17 +142,6 @@ div ebx ; Divides eax = 1234 by ebx = 3.
 
 
 
-; ; -------------------------------------------------------------------------------
-; ; load_to_array_curr():
-; ; Load 'al' register into ARRAY[index]
-; %macro load_to_array_curr 1
-; ; %1 : pointer to array
-;     mov r9,0xFFFF
-;     mov  [%1+r9], al          ; give the rbx-th array element the value al
-;     ; inc     word[%2]         ; increment the index by 4.
-; %endmacro
-
-
 ; -------------------------------------------------------------------------------
 ; _write():
 ; Write to file
@@ -200,6 +189,6 @@ div ebx ; Divides eax = 1234 by ebx = 3.
     mov  al, %2             ; move bh in al
     mov  dl, 3              ; move a 3 in dl (divisor)
     div  dl                 ; AL (quotient) => knownValue2 // 3
-    add  cl, al             ; add to r8b the value in al (8bits)
+    add  cl, al             ; add to cl the value in al (8bits)
     xor  rax, rax           ; clear rax
 %endmacro
