@@ -11,17 +11,17 @@ newline     equ 10
 tab         equ 09
 F           equ 70
 
-; N equ 97
+N equ 97
 ; N equ 86
 ; N equ 8
-N equ 4
+; N equ 4
 
 ; -------------------------------------------------------------------------------
 ; VARIABLES
 section .data
 ; files
-    ; file_in   db  '../../files/image.txt', 0      ; name of input image file
-    file_in   db  '../../files/image4x4.txt', 0      ; name of input image file
+    file_in   db  '../../files/image.txt', 0      ; name of input image file
+    ; file_in   db  '../../files/image4x4.txt', 0      ; name of input image file
     ; file_in   db  '../../files/image8x8.txt', 0      ; name of input image file
     ; file_in   db  '../../files/image86x86.txt', 0      ; name of input image file
     ; file_in   db  '../../files/image97x97.txt', 0      ; name of input image file
