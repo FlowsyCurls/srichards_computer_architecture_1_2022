@@ -41,22 +41,11 @@
 
 <!-- ABOUT THE PROJECT -->
 ## About The Project
-Before proceeding with this tutorial, you should have a basic understanding of Computer Programming terminologies. A basic understanding of any of the programming languages will help you in understanding the Assembly programming concepts and move fast on the learning track.
+In order to apply the concepts of computer architecture, we propose the design of an application that allows the introduction of an image of at least 390x390, divides it into 16 identical sections and approves the selection of one of these as a candidate to be applied to an interpolation algorithm, the result must be shown to the user to be able to contrast with the original. 
 
+
+The image processing must be performed entirely by means of an assembler program, while in a high-level language an interface must be exposed to select, apply and view the changes of the chosen image sections.
 ![](readme-images/example1.png)
-
-[![Product Name Screen Shot][product-screenshot]](https://example.com)
-
-There are many great README templates available on GitHub; however, I didn't find one that really suited my needs so I created this enhanced one. I want to create a README template so amazing that it'll be the last one you ever need -- I think this is it.
-
-Here's why:
-* Your time should be focused on creating something amazing. A project that solves a problem and helps others
-* You shouldn't be doing the same tasks over and over like creating a README from scratch
-* You should implement DRY principles to the rest of your life :smile:
-
-Of course, no one template will serve all projects since your needs may be different. So I'll be adding more in the near future. You may also suggest changes by forking this repo and creating a pull request or opening an issue. Thanks to all the people have contributed to expanding this template!
-
-Use the `BLANK_README.md` to get started.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
